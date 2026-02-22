@@ -5,6 +5,15 @@ from . import models
 from pydantic import BaseModel
 
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -25,14 +34,18 @@ def root():
 # Add new stock
 
 
-class StockCreate(BaseModel):
+class StockResponse(BaseModel):
+    id: int
     symbol: str
     company_name: str
     market: str
     sector: str
 
+    class Config:
+        from_attributes = True
 
-@app.post("/stocks/")
+
+@app.post("/stocks/", response_model=StockResponse)
 def create_stock(stock: StockCreate, db: Session = Depends(get_db)):
     new_stock = models.Stock(
         symbol=stock.symbol,
@@ -47,6 +60,6 @@ def create_stock(stock: StockCreate, db: Session = Depends(get_db)):
 
 
 # Get all stocks
-@app.get("/stocks/")
+@app.get("/stocks/", response_model=list[StockResponse])
 def get_stocks(db: Session = Depends(get_db)):
     return db.query(models.Stock).all()
