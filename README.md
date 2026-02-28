@@ -76,4 +76,4 @@ Research labs
 
 You built the foundation layer of a fintech analytics platform and version-controlled it correctly.
 
-next day more 
+next day more .. 
