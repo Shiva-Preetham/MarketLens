@@ -35,7 +35,7 @@ Structure your response as:
                 "stream": False,
                 "temperature": 0.3   # more analytical, less creative
             },
-            timeout=60
+            timeout=61
         )
 
         response.raise_for_status()
