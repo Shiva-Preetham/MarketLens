@@ -72,9 +72,10 @@ git push origin v0.1
 
 Research labs
 
-🚀 What You’ve Done So Far
+System Architecture
 
-You built the foundation layer of a fintech analytics platform and version-controlled it correctly.
+Quant Methodology
 
-next day more .. 
-Deploy
+AI Layer
+
+API Endpoints
