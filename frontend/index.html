@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MarketLens Quant Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            padding: 40px;
+        }
+
+        h1 { margin-bottom: 30px; }
+
+        input {
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: gray;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #1e293b;
+        }
+
+        tr {
+            background: #0f172a;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        canvas {
+            background: white;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📊 MarketLens Quant Intelligence</h1>
+
+<h2>Stock Analysis</h2>
+<input type="text" id="stockSymbol" placeholder="RELIANCE.NS">
+<button id="analyzeBtn" onclick="analyzeStock()">Analyze</button>
+
+<div class="card" id="stockCard">
+    <div id="analysisOutput"></div>
+</div>
+
+<canvas id="priceChart" height="300"></canvas>
+
+<hr style="margin:40px 0; opacity:0.2;">
+
+<h2>My Portfolio</h2>
+
+<table id="portfolioTable">
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Quantity</th>
+            <th>Avg Price</th>
+            <th>Entry Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input placeholder="AAPL"></td>
+            <td><input type="number" placeholder="10"></td>
+            <td><input type="number" placeholder="180"></td>
+            <td><input type="date"></td>
+        </tr>
+    </tbody>
+</table>
+
+<button onclick="addRow()">Add Stock</button>
+<button id="calcBtn" onclick="calculatePortfolio()">Calculate Portfolio</button>
+
+<div class="card" id="portfolioCard">
+    <div id="portfolioOutput"></div>
+</div>
+
+<canvas id="allocationChart" height="300"></canvas>
+
+<script>
+
+let priceChart;
+let allocationChart;
+
+function addRow() {
+    const table = document.getElementById("portfolioTable").getElementsByTagName('tbody')[0];
+    const row = table.insertRow();
+
+    row.innerHTML = `
+        <td><input placeholder="Symbol"></td>
+        <td><input type="number"></td>
+        <td><input type="number"></td>
+        <td><input type="date"></td>
+    `;
+}
+
+async function analyzeStock() {
+
+    const btn = document.getElementById("analyzeBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Analyzing <span class='spinner'></span>";
+
+    const symbol = document.getElementById("stockSymbol").value;
+
+    const res = await fetch(`http://127.0.0.1:8000/analyze/${symbol}`);
+    const data = await res.json();
+
+    document.getElementById("analysisOutput").innerHTML = `
+        Trend: ${data.trend}<br>
+        RSI: ${data.metrics.rsi}<br>
+        Sharpe: ${data.metrics.sharpe_ratio}<br>
+        Volatility: ${data.metrics.volatility}<br>
+        Max Drawdown: ${data.metrics.max_drawdown}
+    `;
+
+    const priceRes = await fetch(`http://127.0.0.1:8000/stocks/market-data?symbol=${symbol}`);
+    const priceData = await priceRes.json();
+
+    const labels = priceData.map(d => new Date(d.Date).toLocaleDateString());
+    const prices = priceData.map(d => d.Close);
+
+    if (priceChart) priceChart.destroy();
+
+    priceChart = new Chart(document.getElementById("priceChart"), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [{
+                label: symbol,
+                data: prices,
+                borderColor: "#3b82f6",
+                fill: false
+            }]
+        }
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = "Analyze";
+}
+
+async function calculatePortfolio() {
+
+    const btn = document.getElementById("calcBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Calculating <span class='spinner'></span>";
+
+    const rows = document.querySelectorAll("#portfolioTable tbody tr");
+
+    let totalValue = 0;
+    let allocation = {};
+
+    for (let row of rows) {
+
+        const symbol = row.cells[0].children[0].value;
+        const qty = parseFloat(row.cells[1].children[0].value);
+        const avg = parseFloat(row.cells[2].children[0].value);
+
+        if (!symbol || !qty || !avg) continue;
+
+        const res = await fetch(`http://127.0.0.1:8000/stocks/market-data?symbol=${symbol}`);
+        const data = await res.json();
+
+        const currentPrice = data[data.length - 1].Close;
+        const value = currentPrice * qty;
+
+        totalValue += value;
+        allocation[symbol] = value;
+    }
+
+    let output = "";
+    for (let sym in allocation) {
+        const weight = (allocation[sym] / totalValue * 100).toFixed(2);
+        output += `${sym}: ₹${allocation[sym].toFixed(2)} (${weight}%)<br>`;
+    }
+
+    document.getElementById("portfolioOutput").innerHTML = output;
+
+    if (allocationChart) allocationChart.destroy();
+
+    allocationChart = new Chart(document.getElementById("allocationChart"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(allocation),
+            datasets: [{
+                data: Object.values(allocation),
+                backgroundColor: ["#3b82f6","#22c55e","#facc15","#ef4444","#a855f7"]
+            }]
+        }
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = "Calculate Portfolio";
+}
+
+</script>
+
+</body>
+</html>

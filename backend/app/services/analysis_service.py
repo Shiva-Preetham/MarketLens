@@ -1,53 +1,47 @@
+import numpy as np
+import pandas as pd
 from app.services.data_service import fetch_stock_data
-from app.quant.indicators import moving_average, calculate_rsi
-from app.quant.risk import (
-    calculate_daily_returns,
-    calculate_volatility,
-    calculate_sharpe_ratio,
-    calculate_max_drawdown,
-)
-from app.quant.scoring import calculate_composite_score, generate_rating
 
 
-def analyze_stock(ticker: str):
-    df = fetch_stock_data(ticker)
+def calculate_rsi(series: pd.Series, window: int = 14):
+    delta = series.diff()
 
-    if df.empty:
-        return {"error": "Invalid ticker or no data available"}
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
 
-    df["MA_50"] = moving_average(df["Close"], 50)
-    df["MA_200"] = moving_average(df["Close"], 200)
-    df["RSI"] = calculate_rsi(df["Close"])
+    avg_gain = gain.rolling(window=window).mean()
+    avg_loss = loss.rolling(window=window).mean()
 
-    daily_returns = calculate_daily_returns(df["Close"])
-    volatility = calculate_volatility(daily_returns)
-    sharpe = calculate_sharpe_ratio(daily_returns)
-    max_drawdown = calculate_max_drawdown(df["Close"])
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
 
-    latest = df.iloc[-1]
+    return rsi.iloc[-1]
 
-    trend = "Bullish" if latest["MA_50"] > latest["MA_200"] else "Bearish"
 
-    score = calculate_composite_score(
-        trend,
-        latest["RSI"],
-        sharpe,
-        max_drawdown
-    )
+def analyze_stock(symbol: str):
 
-    rating = generate_rating(score)
+    df = fetch_stock_data(symbol)
+
+    if df is None or df.empty:
+        return {"error": "No data found for this ticker."}
+
+    df["returns"] = df["Close"].pct_change()
+
+    volatility = df["returns"].std() * np.sqrt(252)
+    sharpe_ratio = df["returns"].mean() / df["returns"].std() * np.sqrt(252)
+    max_drawdown = (df["Close"] / df["Close"].cummax() - 1).min()
+
+    rsi_value = calculate_rsi(df["Close"])
+
+    trend = "Bullish" if df["Close"].iloc[-1] > df["Close"].mean() else "Bearish"
 
     return {
-        "ticker": ticker.upper(),
-        "metrics": {
-            "ma_50": round(latest["MA_50"], 2),
-            "ma_200": round(latest["MA_200"], 2),
-            "rsi": round(latest["RSI"], 2),
-            "volatility": round(volatility, 4),
-            "sharpe_ratio": round(sharpe, 4),
-            "max_drawdown": round(max_drawdown, 4),
-        },
         "trend": trend,
-        "score": score,
-        "rating": rating,
+        "rating": "Quant-Based",
+        "metrics": {
+            "rsi": round(float(rsi_value), 2),
+            "volatility": round(float(volatility), 4),
+            "sharpe_ratio": round(float(sharpe_ratio), 4),
+            "max_drawdown": round(float(max_drawdown), 4),
+        }
     }

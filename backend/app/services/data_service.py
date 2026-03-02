@@ -1,50 +1,41 @@
 import yfinance as yf
-import numpy as np
 import pandas as pd
+import numpy as np
 
 
-def fetch_stock_dataframe(symbol: str, period: str = "1y"):
+# =========================
+# FETCH STOCK DATA
+# =========================
+def fetch_stock_data(symbol: str, period: str = "1y"):
+
     stock = yf.Ticker(symbol)
     df = stock.history(period=period)
 
     if df.empty:
         return None
 
-    df["Returns"] = df["Close"].pct_change()
-    df = df.dropna()
+    df.reset_index(inplace=True)
     return df
 
 
-def fetch_stock_data(symbol: str, period: str = "1y"):
-    df = fetch_stock_dataframe(symbol, period)
-
-    if df is None:
-        return {"error": "Invalid symbol or no data found"}
-
-    return df[["Close", "Returns"]].reset_index().to_dict(orient="records")
-
-
+# =========================
+# RISK METRICS
+# =========================
 def calculate_risk_metrics(symbol: str, period: str = "1y"):
-    df = fetch_stock_dataframe(symbol, period)
 
-    if df is None:
-        return {"error": "Invalid symbol or no data found"}
+    df = fetch_stock_data(symbol, period)
 
-    returns = df["Returns"].values
+    if df is None or df.empty:
+        return {"error": "No data found."}
 
-    volatility = np.std(returns) * np.sqrt(252)
+    df["returns"] = df["Close"].pct_change()
 
-    risk_free_rate = 0.01
-    excess_returns = returns - risk_free_rate / 252
-    sharpe_ratio = np.mean(excess_returns) / np.std(returns) * np.sqrt(252)
-
-    cumulative = np.cumprod(1 + returns)
-    peak = np.maximum.accumulate(cumulative)
-    drawdown = (cumulative - peak) / peak
-    max_drawdown = np.min(drawdown)
+    volatility = df["returns"].std() * np.sqrt(252)
+    sharpe_ratio = df["returns"].mean() / df["returns"].std() * np.sqrt(252)
+    max_drawdown = (df["Close"] / df["Close"].cummax() - 1).min()
 
     return {
-        "volatility": float(volatility),
-        "sharpe_ratio": float(sharpe_ratio),
-        "max_drawdown": float(max_drawdown)
+        "volatility": round(float(volatility), 4),
+        "sharpe_ratio": round(float(sharpe_ratio), 4),
+        "max_drawdown": round(float(max_drawdown), 4),
     }
