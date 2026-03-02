@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MarketLens Quant Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 40px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px 5px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        .card {
+            background-color: #1e293b;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            width: 400px;
+        }
+
+        canvas {
+            margin-top: 30px;
+            background: white;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 MarketLens Quant Dashboard</h1>
+
+<input type="text" id="symbol" placeholder="Enter Stock Symbol (e.g., RELIANCE.NS)">
+<button onclick="analyzeStock()">Analyze</button>
+
+<div class="card">
+    <h3>Risk Metrics</h3>
+    <div id="metrics">No data yet</div>
+</div>
+
+<canvas id="priceChart" width="900" height="400"></canvas>
+
+<script>
+let chartInstance = null;
+
+async function analyzeStock() {
+    const symbol = document.getElementById("symbol").value;
+
+    if (!symbol) {
+        alert("Please enter a stock symbol");
+        return;
+    }
+
+    const priceResponse = await fetch(`http://127.0.0.1:8000/stocks/market-data?symbol=${symbol}`);
+    const riskResponse = await fetch(`http://127.0.0.1:8000/stocks/risk-metrics?symbol=${symbol}`);
+
+    const priceData = await priceResponse.json();
+    const riskData = await riskResponse.json();
+
+    if (riskData.error) {
+        alert(riskData.error);
+        return;
+    }
+
+    document.getElementById("metrics").innerHTML = `
+        Volatility: <b>${riskData.volatility.toFixed(4)}</b><br>
+        Sharpe Ratio: <b>${riskData.sharpe_ratio.toFixed(4)}</b><br>
+        Max Drawdown: <b>${riskData.max_drawdown.toFixed(4)}</b>
+    `;
+
+    const labels = priceData.map(item =>
+        new Date(item.Date).toLocaleDateString()
+    );
+
+    const prices = priceData.map(item => item.Close);
+
+    const ctx = document.getElementById("priceChart").getContext("2d");
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: symbol + " Price",
+                data: prices,
+                borderColor: "#38bdf8",
+                borderWidth: 2,
+                fill: false
+            }]
+        }
+    });
+}
+</script>
+
+</body>
+</html>
