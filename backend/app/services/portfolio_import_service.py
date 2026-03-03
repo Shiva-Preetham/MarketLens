@@ -1,9 +1,17 @@
 import io
+import base64
+import json
+import os
+import re
 from typing import List, Dict, Tuple
 
 import pandas as pd
+import requests
 
 
+# =========================
+# TABULAR COLUMN NORMALIZER
+# =========================
 def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     lower_cols = {c.lower().strip(): c for c in df.columns}
 
@@ -54,6 +62,9 @@ def _rows_from_frame(df: pd.DataFrame) -> List[Dict]:
     return rows
 
 
+# =========================
+# TABULAR FILE PARSER
+# =========================
 def parse_tabular_bytes(data: bytes, ext: str) -> Tuple[List[Dict], str]:
     ext = ext.lower()
     if ext in (".csv", ".txt"):
@@ -74,53 +85,123 @@ def parse_tabular_bytes(data: bytes, ext: str) -> Tuple[List[Dict], str]:
     return [], "unknown"
 
 
-def parse_image_bytes(data: bytes) -> Tuple[List[Dict], str]:
+# =========================
+# CLAUDE VISION IMAGE PARSER
+# Replaces broken pytesseract OCR
+# =========================
+def parse_image_bytes_with_claude(data: bytes, media_type: str = "image/jpeg") -> Tuple[List[Dict], str]:
+    """
+    Use Claude Vision (claude-sonnet-4-20250514) to extract holdings from
+    a broker screenshot. Returns (holdings_list, source_type).
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return [], "image_error_no_api_key"
+
+    image_b64 = base64.standard_b64encode(data).decode("utf-8")
+
+    prompt = """This is a screenshot from a stock broker app showing a holdings/portfolio list.
+
+Extract every stock holding you can see. For each holding return:
+- symbol: the stock ticker/symbol (e.g. GOLDBEES, BANKBETA)
+- qty: the quantity / number of shares (look for "Qty." label)
+- avg: the average buy price (look for "Avg." label)
+
+Return ONLY a valid JSON array, nothing else. Example:
+[{"symbol": "GOLDBEES", "qty": 2, "avg": 71.81}, {"symbol": "BANKBETA", "qty": 2, "avg": 50.13}]
+
+If a value is not visible, use null. Do not include any explanation or markdown."""
+
+    payload = {
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": image_b64,
+                        },
+                    },
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    }
+
     try:
-        import pytesseract  # type: ignore
-        from PIL import Image  # type: ignore
-    except Exception:
-        # OCR not configured on the server
-        return [], "image_unsupported"
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        text = response.json()["content"][0]["text"].strip()
 
-    image = Image.open(io.BytesIO(data))
-    text = pytesseract.image_to_string(image)
+        # Strip markdown fences if present
+        text = re.sub(r"^```[a-z]*\n?", "", text)
+        text = re.sub(r"\n?```$", "", text)
 
-    rows: List[Dict] = []
-    for line in text.splitlines():
-        parts = [p for p in line.replace("\t", " ").split(" ") if p]
-        if not parts:
-            continue
-        symbol = parts[0].upper()
-        # Very simple heuristic: SYMBOL QTY PRICE
-        qty = None
-        avg = None
-        if len(parts) >= 2:
-            try:
-                qty = float(parts[1])
-            except ValueError:
-                qty = None
-        if len(parts) >= 3:
-            try:
-                avg = float(parts[2])
-            except ValueError:
-                avg = None
-        rows.append({"symbol": symbol, "qty": qty, "avg": avg})
+        raw = json.loads(text)
+        holdings: List[Dict] = []
+        for item in raw:
+            symbol = str(item.get("symbol", "")).strip().upper()
+            if not symbol:
+                continue
+            qty = item.get("qty")
+            avg = item.get("avg")
+            holdings.append({
+                "symbol": symbol,
+                "qty": float(qty) if qty is not None else None,
+                "avg": float(avg) if avg is not None else None,
+            })
+        return holdings, "image_claude_vision"
 
-    return rows, "image_ocr"
+    except Exception as e:
+        return [], f"image_error:{str(e)}"
 
 
+# =========================
+# MEDIA TYPE HELPER
+# =========================
+_EXT_TO_MEDIA_TYPE = {
+    ".jpg":  "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png":  "image/png",
+    ".webp": "image/webp",
+    ".gif":  "image/gif",
+    ".bmp":  "image/png",   # convert-free fallback
+}
+
+IMAGE_EXTENSIONS = set(_EXT_TO_MEDIA_TYPE.keys())
+
+
+# =========================
+# MAIN ENTRY POINT
+# =========================
 def parse_portfolio_file(filename: str, data: bytes) -> Dict:
     ext = ""
     if "." in filename:
-        ext = filename[filename.rfind(".") :].lower()
+        ext = filename[filename.rfind("."):].lower()
 
+    # Try tabular formats first
     holdings, source = parse_tabular_bytes(data, ext)
+    if holdings:
+        return {"source_type": source, "holdings": holdings}
 
-    if not holdings and ext in (".png", ".jpg", ".jpeg", ".webp", ".bmp"):
-        holdings, source = parse_image_bytes(data)
+    # Fall back to Claude Vision for images
+    if ext in IMAGE_EXTENSIONS:
+        media_type = _EXT_TO_MEDIA_TYPE.get(ext, "image/jpeg")
+        holdings, source = parse_image_bytes_with_claude(data, media_type)
+        return {"source_type": source, "holdings": holdings}
 
-    return {
-        "source_type": source,
-        "holdings": holdings,
-    }
-
+    return {"source_type": "unsupported", "holdings": []}
