@@ -736,6 +736,10 @@ input[type="file"] { display: none; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       Watchlist
     </button>
+    <button class="nav-item" onclick="switchTab('predict', this)" data-section="predict">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      ML Predict
+    </button>
   </nav>
 
   <div class="sidebar-footer">
@@ -948,7 +952,7 @@ const COLORS = ["#e8c97a","#4dd9e8","#3ddba4","#f0536a","#a78bfa","#fb923c","#38
 const BOOKMARKS_KEY = "marketlens_portfolio_bookmarks_v1";
 const LAST_BOOKMARK_KEY = "marketlens_last_bookmark_id_v1";
 
-const TOPBAR = { dashboard: ["Stock Analysis","DASHBOARD / ANALYZE"], portfolio: ["My Portfolio","PORTFOLIO / OPTIMIZE"], watchlist: ["Watchlist","WATCHLIST / DATABASE"] };
+const TOPBAR = { dashboard: ["Stock Analysis","DASHBOARD / ANALYZE"], portfolio: ["My Portfolio","PORTFOLIO / OPTIMIZE"], watchlist: ["Watchlist","WATCHLIST / DATABASE"], predict: ["ML Prediction","PREDICT / ENSEMBLE · RF + XGBOOST"] };
 
 function switchTab(tab, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1385,6 +1389,133 @@ function addToPortfolioFromWatchlist(symbol) {
   const btn = document.querySelector('.nav-item[data-section="portfolio"]');
   if (btn) switchTab("portfolio", btn);
 }
+
+// ── ML PREDICTION ──────────────────────────────────────────────
+
+async function runMLPredict() {
+  const symbol = document.getElementById("mlSymbol").value.trim();
+  if (!symbol) { alert("Enter a symbol."); return; }
+  const btn = document.getElementById("mlPredictBtn");
+  const status = document.getElementById("mlStatus");
+  setLoading(btn, true);
+  status.textContent = "Running prediction… (first call may take ~30s to train)";
+  hideMLCards();
+  try {
+    const res = await fetch(`${API_BASE}/predict/${encodeURIComponent(symbol)}`);
+    const data = await res.json();
+    if (data.status === "error") { status.textContent = "Error: " + data.detail; return; }
+    renderMLResult(data);
+    status.textContent = "";
+    // Also load model info
+    await loadMLInfo(symbol);
+  } catch(e) {
+    status.textContent = "Failed — is the backend running? " + e.message;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function runMLTrain() {
+  const symbol = document.getElementById("mlSymbol").value.trim();
+  if (!symbol) { alert("Enter a symbol first."); return; }
+  const btn = document.getElementById("mlTrainBtn");
+  const status = document.getElementById("mlStatus");
+  setLoading(btn, true);
+  status.textContent = "Retraining model in background…";
+  try {
+    const res = await fetch(`${API_BASE}/predict/${encodeURIComponent(symbol)}/train`, { method: "POST" });
+    const data = await res.json();
+    status.textContent = data.message || "Training started.";
+  } catch(e) {
+    status.textContent = "Failed to start training: " + e.message;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function loadMLInfo(symbol) {
+  try {
+    const res = await fetch(`${API_BASE}/predict/${encodeURIComponent(symbol)}/info`);
+    const data = await res.json();
+    if (data.status !== "ok") return;
+    renderMLInfo(data);
+  } catch {}
+}
+
+function hideMLCards() {
+  ["mlSignalCard","mlBarCard","mlFeatCard","mlInfoCard"].forEach(id => {
+    document.getElementById(id).style.display = "none";
+  });
+}
+
+function renderMLResult(data) {
+  const isBull = data.signal === "BULLISH";
+  const bullProb = isBull ? data.confidence : (100 - data.confidence);
+
+  // Signal card
+  const card = document.getElementById("mlSignalCard");
+  card.style.display = "block";
+  card.style.borderColor = isBull ? "rgba(61,219,164,0.4)" : "rgba(240,83,106,0.4)";
+
+  const label = document.getElementById("mlSignalLabel");
+  label.textContent = data.signal;
+  label.style.color = isBull ? "var(--green)" : "var(--red)";
+
+  document.getElementById("mlConfidence").textContent = `${data.confidence}% confidence`;
+  document.getElementById("mlRfProb").textContent = data.rf_probability + "%";
+  document.getElementById("mlXgbProb").textContent = data.xgb_probability + "%";
+  document.getElementById("mlEnsembleProb").textContent = bullProb.toFixed(1) + "%";
+
+  const sent = data.sentiment_score;
+  const sentEl = document.getElementById("mlSentiment");
+  sentEl.textContent = sent > 0.1 ? `+${sent.toFixed(3)} 😊` : sent < -0.1 ? `${sent.toFixed(3)} 😟` : `${sent.toFixed(3)} 😐`;
+  sentEl.style.color = sent > 0.05 ? "var(--green)" : sent < -0.05 ? "var(--red)" : "var(--text2)";
+
+  document.getElementById("mlAccuracy").textContent = (data.model_accuracy * 100).toFixed(1) + "%";
+  document.getElementById("mlTrainedAt").textContent = data.trained_at ? "Trained " + new Date(data.trained_at).toLocaleDateString() : "";
+
+  // Confidence bar
+  document.getElementById("mlBarCard").style.display = "block";
+  document.getElementById("mlConfBar").style.width = bullProb + "%";
+  document.getElementById("mlConfBar").style.background = isBull ? "var(--green)" : "var(--red)";
+  document.getElementById("mlConfBarLabel").textContent = `${bullProb.toFixed(1)}% bullish probability`;
+
+  // Feature snapshot
+  const featEntries = Object.entries(data.feature_snapshot || {});
+  if (featEntries.length > 0) {
+    document.getElementById("mlFeatCard").style.display = "block";
+    document.getElementById("mlFeatures").innerHTML = featEntries.map(([k,v]) =>
+      `<div class="metric-box"><div class="metric-label">${k.replace(/_/g," ")}</div><div class="metric-value" style="font-size:0.95rem">${v}</div></div>`
+    ).join("");
+  }
+}
+
+function renderMLInfo(data) {
+  document.getElementById("mlInfoCard").style.display = "block";
+  document.getElementById("mlModelMetrics").innerHTML = [
+    ["Accuracy", (data.accuracy*100).toFixed(1)+"%"],
+    ["Precision", (data.precision*100).toFixed(1)+"%"],
+    ["Recall", (data.recall*100).toFixed(1)+"%"],
+    ["F1 Score", (data.f1*100).toFixed(1)+"%"],
+    ["AUC-ROC", data.auc_roc],
+    ["CV Mean", (data.cv_mean*100).toFixed(1)+"%"],
+    ["Samples", data.n_samples],
+    ["Features", data.n_features],
+  ].map(([l,v]) => `<div class="metric-box"><div class="metric-label">${l}</div><div class="metric-value" style="font-size:0.95rem">${v}</div></div>`).join("");
+
+  // Feature importance bars
+  const top = (data.top_features || []).slice(0, 10);
+  const maxImp = top.length ? top[0].importance : 1;
+  document.getElementById("mlImportanceChart").innerHTML = top.map(f => `
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-family:var(--mono);font-size:0.68rem;color:var(--text2);width:160px;flex-shrink:0">${f.feature.replace(/_/g," ")}</span>
+      <div style="flex:1;height:6px;background:var(--surface2);border-radius:999px;overflow:hidden">
+        <div style="height:100%;width:${((f.importance/maxImp)*100).toFixed(1)}%;background:var(--gold);border-radius:999px"></div>
+      </div>
+      <span style="font-family:var(--mono);font-size:0.65rem;color:var(--text3);width:40px;text-align:right">${(f.importance*100).toFixed(2)}%</span>
+    </div>`).join("");
+}
+
 </script>
 
 </body>
