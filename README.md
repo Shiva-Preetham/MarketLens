@@ -79,3 +79,14 @@ Quant Methodology
 AI Layer
 
 API Endpoints
+## Architecture
+
+Frontend (HTML + Chart.js)
+        ↓
+FastAPI Backend
+        ↓
+Data Service (yfinance)
+        ↓
+Analysis Engine (RSI, Sharpe, Risk)
+        ↓
+Optional LLM Commentary
