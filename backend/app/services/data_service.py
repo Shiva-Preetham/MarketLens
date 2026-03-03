@@ -1,6 +1,12 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from app.quant.risk import (
+    calculate_daily_returns,
+    calculate_volatility,
+    calculate_sharpe_ratio,
+    calculate_max_drawdown,
+)
 
 
 # =========================
@@ -28,11 +34,11 @@ def calculate_risk_metrics(symbol: str, period: str = "1y"):
     if df is None or df.empty:
         return {"error": "No data found."}
 
-    df["returns"] = df["Close"].pct_change()
+    daily_returns = calculate_daily_returns(df["Close"])
 
-    volatility = df["returns"].std() * np.sqrt(252)
-    sharpe_ratio = df["returns"].mean() / df["returns"].std() * np.sqrt(252)
-    max_drawdown = (df["Close"] / df["Close"].cummax() - 1).min()
+    volatility = calculate_volatility(daily_returns)
+    sharpe_ratio = calculate_sharpe_ratio(daily_returns)
+    max_drawdown = calculate_max_drawdown(df["Close"])
 
     return {
         "volatility": round(float(volatility), 4),

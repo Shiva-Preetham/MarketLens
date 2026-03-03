@@ -1,248 +1,1439 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarketLens Quant Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: white;
-            padding: 40px;
-        }
+<style>
+:root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: rgba(17, 24, 39, 0.8);
+    --bg-card-hover: rgba(30, 41, 59, 0.9);
+    --border-subtle: rgba(148, 163, 184, 0.12);
+    --accent: #06b6d4;
+    --accent-hover: #22d3ee;
+    --accent-muted: rgba(6, 182, 212, 0.15);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --shadow: 0 4px 24px -4px rgba(0,0,0,0.4);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-        h1 { margin-bottom: 30px; }
+* {
+    box-sizing: border-box;
+}
 
-        input {
-            padding: 8px;
-            border-radius: 6px;
-            border: none;
-            margin: 5px;
-        }
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px;
+    line-height: 1.6;
+}
 
-        button {
-            padding: 8px 14px;
-            border-radius: 6px;
-            border: none;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 400px;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.15), transparent);
+    pointer-events: none;
+    z-index: 0;
+}
 
-        button:disabled {
-            background: gray;
-        }
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
 
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-        }
+.header {
+    margin-bottom: 36px;
+}
 
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
+.header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
-        th {
-            background: #1e293b;
-        }
+.header span {
+    -webkit-text-fill-color: initial;
+    opacity: 0.9;
+}
 
-        tr {
-            background: #0f172a;
-        }
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 32px;
+    padding: 4px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    width: fit-content;
+    border: 1px solid var(--border-subtle);
+}
 
-        .card {
-            background: #1e293b;
-            padding: 20px;
-            margin-top: 20px;
-            border-radius: 12px;
-        }
+.tabs button {
+    padding: 10px 22px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
 
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.2);
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-            margin-left: 8px;
-        }
+.tabs button:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.05);
+}
 
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
+.tabs button.active {
+    background: var(--accent);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+}
 
-        canvas {
-            background: white;
-            border-radius: 12px;
-            margin-top: 20px;
-        }
-    </style>
+.section {
+    display: none;
+    animation: fadeIn 0.35s ease-out;
+}
+
+.section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.section h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+}
+
+.card {
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    margin-top: 20px;
+    border: 1px solid var(--border-subtle);
+    backdrop-filter: blur(12px);
+    transition: var(--transition);
+}
+
+.card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+.card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--text-secondary);
+}
+
+.search-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+input[type="text"],
+input[type="number"] {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    min-width: 180px;
+    transition: var(--transition);
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+button.primary {
+    background: var(--accent);
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    color: var(--bg-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+button.primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+}
+
+button.primary:active {
+    transform: translateY(0);
+}
+
+button.primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+button.secondary {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+button.secondary:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+}
+
+.loading::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-subtle);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#analysisOutput,
+#portfolioOutput {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+
+#analysisOutput b,
+#portfolioOutput b {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.placeholder-text {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+canvas {
+    margin-top: 24px;
+    border-radius: var(--radius-lg);
+    display: none;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 16px;
+}
+
+.chart-wrapper {
+    margin-top: 24px;
+}
+
+.small-chart {
+    width: 220px;
+    height: 220px;
+}
+
+.allocation-card {
+    margin-top: 24px;
+}
+
+.allocation-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+}
+
+.allocation-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 140px;
+}
+
+.allocation-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.allocation-color {
+    width: 18px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+.allocation-label {
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.portfolio-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.bookmark-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.bookmark-bar label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.bookmark-select {
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: inherit;
+    min-width: 220px;
+}
+
+.bookmark-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+th, td {
+    padding: 14px 16px;
+    text-align: left;
+}
+
+th {
+    background: var(--bg-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+tr {
+    background: var(--bg-card);
+    transition: var(--transition);
+}
+
+tr:nth-child(even) {
+    background: rgba(17, 24, 39, 0.6);
+}
+
+tr:hover {
+    background: var(--bg-card-hover);
+}
+
+td input {
+    width: 100%;
+    min-width: 0;
+}
+
+hr {
+    margin: 16px 0;
+    border: none;
+    height: 1px;
+    background: var(--border-subtle);
+}
+
+.ai-box {
+    padding: 16px 20px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--accent);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.metric-item {
+    padding: 12px 16px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.trend-up { color: var(--success); }
+.trend-down { color: var(--danger); }
+
+.rating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #bbf7d0;
+}
+
+.rating-pill.weak {
+    background: rgba(249, 115, 22, 0.12);
+    border-color: rgba(249, 115, 22, 0.5);
+    color: #fed7aa;
+}
+
+.rating-pill.avoid {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fecaca;
+}
+
+.import-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.import-row input[type="file"] {
+    padding: 6px 0;
+    color: var(--text-secondary);
+}
+</style>
 </head>
 
 <body>
 
-<h1>📊 MarketLens Quant Intelligence</h1>
+<div class="container">
 
-<h2>Stock Analysis</h2>
-<input type="text" id="stockSymbol" placeholder="RELIANCE.NS">
-<button id="analyzeBtn" onclick="analyzeStock()">Analyze</button>
+<header class="header">
+    <h1><span>MarketLens</span> Quant Intelligence</h1>
+</header>
 
-<div class="card" id="stockCard">
-    <div id="analysisOutput"></div>
+<div class="tabs">
+    <button class="active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button onclick="switchTab('portfolio',this)">Portfolio</button>
+    <button onclick="switchTab('watchlist',this)">Watchlist</button>
 </div>
 
-<canvas id="priceChart" height="300"></canvas>
+<!-- ================= DASHBOARD ================= -->
 
-<hr style="margin:40px 0; opacity:0.2;">
+<div id="dashboard" class="section active">
 
-<h2>My Portfolio</h2>
+    <h2>Stock Analysis</h2>
 
-<table id="portfolioTable">
-    <thead>
-        <tr>
-            <th>Symbol</th>
-            <th>Quantity</th>
-            <th>Avg Price</th>
-            <th>Entry Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><input placeholder="AAPL"></td>
-            <td><input type="number" placeholder="10"></td>
-            <td><input type="number" placeholder="180"></td>
-            <td><input type="date"></td>
-        </tr>
-    </tbody>
-</table>
+    <div class="search-row">
+        <input type="text" id="stockSymbol" placeholder="e.g. RELIANCE.NS or AAPL">
+        <button class="primary" id="analyzeBtn" onclick="analyzeStock()">Analyze</button>
+    </div>
 
-<button onclick="addRow()">Add Stock</button>
-<button id="calcBtn" onclick="calculatePortfolio()">Calculate Portfolio</button>
+    <div class="card">
+        <div id="analysisOutput"><span class="placeholder-text">Enter a symbol and click Analyze to see metrics</span></div>
+    </div>
 
-<div class="card" id="portfolioCard">
-    <div id="portfolioOutput"></div>
+    <div class="chart-wrapper">
+        <canvas id="priceChart" height="300"></canvas>
+    </div>
+
 </div>
 
-<canvas id="allocationChart" height="300"></canvas>
+<!-- ================= PORTFOLIO ================= -->
+
+<div id="portfolio" class="section">
+
+    <h2>My Portfolio</h2>
+
+    <table id="portfolioTable">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Quantity</th>
+                <th>Avg Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input placeholder="AAPL"></td>
+                <td><input type="number" placeholder="10"></td>
+                <td><input type="number" placeholder="180"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="portfolio-actions">
+        <button class="primary secondary" onclick="addRow()">Add Stock</button>
+        <button class="primary" id="calcBtn" onclick="calculatePortfolio()">Calculate</button>
+        <button class="primary secondary" id="resetBtn" onclick="resetPortfolio()">Reset</button>
+    </div>
+
+    <div class="bookmark-bar">
+        <label for="bookmarkSelect">Bookmarks</label>
+        <select id="bookmarkSelect" class="bookmark-select"></select>
+        <button class="primary secondary" onclick="loadSelectedBookmark()">Load</button>
+        <button class="primary secondary" onclick="saveBookmark()">Save</button>
+        <button class="primary secondary" onclick="deleteSelectedBookmark()">Delete</button>
+    </div>
+
+    <div class="card allocation-card">
+        <h3>Import Portfolio</h3>
+        <div class="import-row">
+            <input type="file" id="portfolioFile" accept=".csv,.txt,.xlsx,.xls,.json,image/*" multiple>
+            <button class="primary secondary" onclick="importPortfolioFile()">Import</button>
+        </div>
+        <div id="importStatus" class="placeholder-text" style="margin-top:10px">
+            Upload one or more CSV/Excel/JSON files or screenshots of your holdings. We will pre-fill the table.
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="portfolioOutput"><span class="placeholder-text">Add holdings and click Calculate</span></div>
+    </div>
+
+    <div class="card allocation-card">
+        <div class="allocation-wrapper">
+            <canvas id="allocationChart" class="small-chart"></canvas>
+            <div id="allocationLegend" class="allocation-legend"></div>
+        </div>
+    </div>
+
+    <div class="card allocation-card">
+        <h3>Efficient Frontier</h3>
+        <div class="import-row" style="margin-bottom:10px">
+            <button class="primary secondary" id="frontierBtn" onclick="runEfficientFrontier()">Run Frontier</button>
+            <span id="frontierStatus" class="placeholder-text">Requires at least 2 symbols.</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="frontierChart" height="260"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>AI Recommendation</h3>
+        <div id="aiRecommendation" class="ai-box">
+            <span class="placeholder-text">Calculate portfolio for recommendations</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= WATCHLIST ================= -->
+
+<div id="watchlist" class="section">
+
+    <h2>Watchlist (Database)</h2>
+
+    <div class="card">
+        <div class="search-row" style="margin-bottom:10px">
+            <input type="text" id="wlSymbol" placeholder="Symbol (e.g. RELIANCE.NS)">
+            <input type="text" id="wlName" placeholder="Company name">
+            <input type="text" id="wlMarket" placeholder="Market (e.g. NSE)">
+            <input type="text" id="wlSector" placeholder="Sector (e.g. Financials)">
+        </div>
+        <button class="primary" onclick="createWatchStock()">Save to Watchlist</button>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+        <div id="watchlistOutput" class="placeholder-text">No stocks saved yet.</div>
+        <table id="watchlistTable" style="margin-top:12px; display:none">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Market</th>
+                    <th>Sector</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+</div>
 
 <script>
 
+const API_BASE = "http://127.0.0.1:8000";
+
 let priceChart;
 let allocationChart;
+let frontierChart;
+
+// Distinct palette for many holdings
+const ALLOCATION_COLORS = [
+    "#0ea5e9", "#22c55e", "#f97316", "#e11d48",
+    "#6366f1", "#14b8a6", "#a855f7", "#facc15",
+    "#fb7185", "#4ade80", "#2dd4bf", "#60a5fa"
+];
+
+const BOOKMARKS_KEY = "marketlens_portfolio_bookmarks_v1";
+const LAST_BOOKMARK_KEY = "marketlens_last_bookmark_id_v1";
+
+function safeJsonParse(str, fallback) {
+    try {
+        return JSON.parse(str);
+    } catch {
+        return fallback;
+    }
+}
+
+function getBookmarks() {
+    const raw = localStorage.getItem(BOOKMARKS_KEY);
+    const parsed = safeJsonParse(raw, []);
+    return Array.isArray(parsed) ? parsed : [];
+}
+
+function setBookmarks(bookmarks) {
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+}
+
+function uid() {
+    return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizeRow(row) {
+    const symbol = (row.symbol || "").trim().toUpperCase();
+    const qty = row.qty === "" || row.qty === null || row.qty === undefined ? "" : Number(row.qty);
+    const avg = row.avg === "" || row.avg === null || row.avg === undefined ? "" : Number(row.avg);
+    return { symbol, qty, avg };
+}
+
+function readTableRows() {
+    const rows = document.querySelectorAll("#portfolioTable tbody tr");
+    return Array.from(rows).map(r => ({
+        symbol: r.cells[0].children[0].value.trim(),
+        qty: r.cells[1].children[0].value,
+        avg: r.cells[2].children[0].value
+    })).map(normalizeRow).filter(r => r.symbol || r.qty !== "" || r.avg !== "");
+}
+
+function renderTableRows(rows) {
+    const tbody = document.querySelector("#portfolioTable tbody");
+    tbody.innerHTML = "";
+
+    const normalized = (rows && rows.length ? rows : [{ symbol: "", qty: "", avg: "" }]).map(normalizeRow);
+    for (const r of normalized) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><input placeholder="Symbol" value="${r.symbol || ""}"></td>
+            <td><input type="number" placeholder="Qty" value="${r.qty === "" ? "" : r.qty}"></td>
+            <td><input type="number" placeholder="Price" value="${r.avg === "" ? "" : r.avg}"></td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+function resetPortfolio() {
+    renderTableRows([{ symbol: "", qty: "", avg: "" }]);
+
+    document.getElementById("portfolioOutput").innerHTML =
+        '<span class="placeholder-text">Add holdings and click Calculate</span>';
+    document.getElementById("aiRecommendation").innerHTML =
+        '<span class="placeholder-text">Calculate portfolio for recommendations</span>';
+
+    const legendEl = document.getElementById("allocationLegend");
+    legendEl.innerHTML = '<span class="placeholder-text">Add holdings to see allocation</span>';
+
+    const allocCanvas = document.getElementById("allocationChart");
+    allocCanvas.style.display = "none";
+    if (allocationChart) {
+        allocationChart.destroy();
+        allocationChart = undefined;
+    }
+}
+
+function refreshBookmarkSelect(selectedId) {
+    const select = document.getElementById("bookmarkSelect");
+    const bookmarks = getBookmarks().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+    select.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = bookmarks.length ? "Select a bookmark…" : "No bookmarks yet";
+    select.appendChild(placeholder);
+
+    for (const bm of bookmarks) {
+        const opt = document.createElement("option");
+        opt.value = bm.id;
+        opt.textContent = bm.name;
+        select.appendChild(opt);
+    }
+
+    const toSelect = selectedId || localStorage.getItem(LAST_BOOKMARK_KEY) || "";
+    if (toSelect) select.value = toSelect;
+}
+
+function saveBookmark() {
+    const rows = readTableRows();
+    if (!rows.length) {
+        alert("Add at least one holding before saving a bookmark.");
+        return;
+    }
+
+    const suggested = rows.map(r => r.symbol).filter(Boolean).slice(0, 3).join(", ");
+    const name = (prompt("Bookmark name:", suggested || "My Portfolio") || "").trim();
+    if (!name) return;
+
+    const bookmarks = getBookmarks();
+    const existingIdx = bookmarks.findIndex(b => b.name.toLowerCase() === name.toLowerCase());
+    const now = Date.now();
+    const bm = {
+        id: existingIdx >= 0 ? bookmarks[existingIdx].id : uid(),
+        name,
+        rows,
+        updatedAt: now
+    };
+
+    if (existingIdx >= 0) {
+        bookmarks[existingIdx] = bm;
+    } else {
+        bookmarks.push(bm);
+    }
+
+    setBookmarks(bookmarks);
+    localStorage.setItem(LAST_BOOKMARK_KEY, bm.id);
+    refreshBookmarkSelect(bm.id);
+}
+
+function loadSelectedBookmark() {
+    const select = document.getElementById("bookmarkSelect");
+    const id = select.value;
+    if (!id) return;
+
+    const bm = getBookmarks().find(b => b.id === id);
+    if (!bm) return;
+
+    renderTableRows(bm.rows || []);
+    localStorage.setItem(LAST_BOOKMARK_KEY, bm.id);
+}
+
+function deleteSelectedBookmark() {
+    const select = document.getElementById("bookmarkSelect");
+    const id = select.value;
+    if (!id) return;
+
+    const bookmarks = getBookmarks();
+    const bm = bookmarks.find(b => b.id === id);
+    if (!bm) return;
+
+    const ok = confirm(`Delete bookmark "${bm.name}"?`);
+    if (!ok) return;
+
+    const next = bookmarks.filter(b => b.id !== id);
+    setBookmarks(next);
+
+    if (localStorage.getItem(LAST_BOOKMARK_KEY) === id) {
+        localStorage.removeItem(LAST_BOOKMARK_KEY);
+    }
+
+    refreshBookmarkSelect("");
+}
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(tab).classList.add('active');
+
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
 
 function addRow() {
-    const table = document.getElementById("portfolioTable").getElementsByTagName('tbody')[0];
+    const table = document.querySelector("#portfolioTable tbody");
     const row = table.insertRow();
-
     row.innerHTML = `
         <td><input placeholder="Symbol"></td>
-        <td><input type="number"></td>
-        <td><input type="number"></td>
-        <td><input type="date"></td>
+        <td><input type="number" placeholder="Qty"></td>
+        <td><input type="number" placeholder="Price"></td>
     `;
+}
+
+// Init bookmarks UI + auto-load last used bookmark
+document.addEventListener("DOMContentLoaded", () => {
+    refreshBookmarkSelect();
+    const lastId = localStorage.getItem(LAST_BOOKMARK_KEY);
+    if (lastId) {
+        const bm = getBookmarks().find(b => b.id === lastId);
+        if (bm) {
+            renderTableRows(bm.rows || []);
+        }
+    }
+    loadWatchlist();
+});
+
+async function importPortfolioFile() {
+    const input = document.getElementById("portfolioFile");
+    const status = document.getElementById("importStatus");
+    if (!input.files || !input.files.length) {
+        alert("Choose a file to import.");
+        return;
+    }
+
+    const formData = new FormData();
+    Array.from(input.files).forEach(f => {
+        formData.append("file", f);
+    });
+
+    status.textContent = "Reading file(s)…";
+
+    try {
+        const res = await fetch(`${API_BASE}/portfolio/import`, {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+
+        if (!data.holdings || !data.holdings.length) {
+            status.textContent = "Could not detect any holdings in the file.";
+            return;
+        }
+
+        const rows = data.holdings.map(h => ({
+            symbol: h.symbol || "",
+            qty: h.qty ?? "",
+            avg: h.avg ?? ""
+        }));
+
+        renderTableRows(rows);
+        const filesCount = data.files_count ?? input.files.length;
+        const src = Array.isArray(data.source_type) ? data.source_type.join(", ") : (data.source_type || "file");
+        status.textContent = `Imported ${rows.length} holdings from ${filesCount} file(s) [${src}]. Review and click Calculate.`;
+    } catch (e) {
+        status.textContent = "Import failed. Make sure the file has columns for symbol, quantity, and price.";
+    }
+}
+
+async function createWatchStock() {
+    const symbol = (document.getElementById("wlSymbol").value || "").trim();
+    const company_name = (document.getElementById("wlName").value || "").trim();
+    const market = (document.getElementById("wlMarket").value || "").trim();
+    const sector = (document.getElementById("wlSector").value || "").trim();
+
+    if (!symbol || !company_name) {
+        alert("Symbol and company name are required.");
+        return;
+    }
+
+    try {
+        await fetch(`${API_BASE}/stocks/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbol, company_name, market, sector })
+        });
+        document.getElementById("wlSymbol").value = "";
+        document.getElementById("wlName").value = "";
+        document.getElementById("wlMarket").value = "";
+        document.getElementById("wlSector").value = "";
+        await loadWatchlist();
+    } catch {
+        alert("Failed to save watchlist stock.");
+    }
+}
+
+async function loadWatchlist() {
+    const out = document.getElementById("watchlistOutput");
+    const table = document.getElementById("watchlistTable");
+    const tbody = table.querySelector("tbody");
+
+    out.textContent = "Loading watchlist…";
+    table.style.display = "none";
+
+    try {
+        const res = await fetch(`${API_BASE}/stocks/`);
+        const items = await res.json();
+
+        if (!items || !items.length) {
+            out.textContent = "No stocks saved yet.";
+            table.style.display = "none";
+            return;
+        }
+
+        tbody.innerHTML = "";
+        for (const s of items) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${s.symbol}</td>
+                <td>${s.company_name || ""}</td>
+                <td>${s.market || ""}</td>
+                <td>${s.sector || ""}</td>
+                <td style="text-align:right">
+                    <button class="primary secondary" style="margin-right:6px" onclick="analyzeFromWatchlist('${s.symbol}')">Analyze</button>
+                    <button class="primary secondary" onclick="addToPortfolioFromWatchlist('${s.symbol}')">Add to Portfolio</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        out.textContent = "";
+        table.style.display = "table";
+    } catch {
+        out.textContent = "Failed to load watchlist.";
+        table.style.display = "none";
+    }
+}
+
+function analyzeFromWatchlist(symbol) {
+    const input = document.getElementById("stockSymbol");
+    input.value = symbol;
+    const tabBtn = Array.from(document.querySelectorAll(".tabs button"))
+        .find(b => b.textContent.trim() === "Dashboard");
+    if (tabBtn) switchTab("dashboard", tabBtn);
+    analyzeStock();
+}
+
+function addToPortfolioFromWatchlist(symbol) {
+    const tbody = document.querySelector("#portfolioTable tbody");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td><input placeholder="Symbol" value="${symbol}"></td>
+        <td><input type="number" placeholder="Qty"></td>
+        <td><input type="number" placeholder="Price"></td>
+    `;
+    tbody.appendChild(tr);
+    const tabBtn = Array.from(document.querySelectorAll(".tabs button"))
+        .find(b => b.textContent.trim() === "Portfolio");
+    if (tabBtn) switchTab("portfolio", tabBtn);
+}
+
+function setLoading(el, loading) {
+    if (loading) {
+        el.disabled = true;
+        el.dataset.text = el.textContent;
+        el.innerHTML = '<span class="loading">Loading</span>';
+    } else {
+        el.disabled = false;
+        el.textContent = el.dataset.text || el.textContent;
+    }
 }
 
 async function analyzeStock() {
+    const symbol = document.getElementById("stockSymbol").value.trim();
+    if (!symbol) return;
 
     const btn = document.getElementById("analyzeBtn");
-    btn.disabled = true;
-    btn.innerHTML = "Analyzing <span class='spinner'></span>";
+    const output = document.getElementById("analysisOutput");
+    setLoading(btn, true);
+    output.innerHTML = '<span class="loading">Fetching analysis</span>';
 
-    const symbol = document.getElementById("stockSymbol").value;
+    try {
+        const res = await fetch(`${API_BASE}/analyze/${symbol}`);
+        const data = await res.json();
 
-    const res = await fetch(`http://127.0.0.1:8000/analyze/${symbol}`);
-    const data = await res.json();
+        const trendClass = (data.trend || '').toLowerCase().includes('up') ? 'trend-up' : 
+                          (data.trend || '').toLowerCase().includes('down') ? 'trend-down' : '';
 
-    document.getElementById("analysisOutput").innerHTML = `
-        Trend: ${data.trend}<br>
-        RSI: ${data.metrics.rsi}<br>
-        Sharpe: ${data.metrics.sharpe_ratio}<br>
-        Volatility: ${data.metrics.volatility}<br>
-        Max Drawdown: ${data.metrics.max_drawdown}
-    `;
+        const ratingText = (data.rating || '').toString();
+        const ratingLower = ratingText.toLowerCase();
+        let ratingClass = '';
+        if (ratingLower.includes('avoid')) ratingClass = 'avoid';
+        else if (ratingLower.includes('weak')) ratingClass = 'weak';
 
-    const priceRes = await fetch(`http://127.0.0.1:8000/stocks/market-data?symbol=${symbol}`);
-    const priceData = await priceRes.json();
+        output.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em">Trend</div>
+                    <div class="metric-value ${trendClass}">${data.trend || 'N/A'}</div>
+                </div>
+                <div>
+                    <span class="rating-pill ${ratingClass}">
+                        ${ratingText || 'No Rating'}
+                    </span>
+                </div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-label">RSI</div>
+                    <div class="metric-value">${data.metrics?.rsi ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Sharpe</div>
+                    <div class="metric-value">${data.metrics?.sharpe_ratio ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Volatility</div>
+                    <div class="metric-value">${data.metrics?.volatility ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Max Drawdown</div>
+                    <div class="metric-value">${data.metrics?.max_drawdown ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Quant Score</div>
+                    <div class="metric-value">${data.metrics?.score ?? 'N/A'}</div>
+                </div>
+            </div>
+        `;
 
-    const labels = priceData.map(d => new Date(d.Date).toLocaleDateString());
-    const prices = priceData.map(d => d.Close);
+        const priceRes = await fetch(`${API_BASE}/stocks/market-data?symbol=${symbol}`);
+        const priceData = await priceRes.json();
 
-    if (priceChart) priceChart.destroy();
+        const labels = priceData.map(d => new Date(d.Date).toLocaleDateString());
+        const prices = priceData.map(d => d.Close);
 
-    priceChart = new Chart(document.getElementById("priceChart"), {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: symbol,
-                data: prices,
-                borderColor: "#3b82f6",
-                fill: false
-            }]
+        // 20-day simple moving average for smoother trend
+        const windowSize = 20;
+        const sma = prices.map((_, idx, arr) => {
+            if (idx < windowSize - 1) return null;
+            const slice = arr.slice(idx - windowSize + 1, idx + 1);
+            const sum = slice.reduce((a, b) => a + b, 0);
+            return sum / slice.length;
+        });
+
+        const chartCanvas = document.getElementById("priceChart");
+        chartCanvas.style.display = "block";
+
+        if (priceChart) priceChart.destroy();
+
+        priceChart = new Chart(chartCanvas, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: symbol,
+                        data: prices,
+                        borderColor: "#06b6d4",
+                        backgroundColor: "rgba(6, 182, 212, 0.12)",
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: "20D SMA",
+                        data: sma,
+                        borderColor: "#22d3ee",
+                        borderDash: [6, 4],
+                        fill: false,
+                        tension: 0.2,
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                        ticks: { color: '#64748b', maxTicksLimit: 8 }
+                    },
+                    y: {
+                        grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        output.innerHTML = `<span style="color:var(--danger)">Failed to fetch data. Is the backend running?</span>`;
+    } finally {
+        setLoading(btn, false);
+    }
+}
+
+async function runEfficientFrontier() {
+    const rows = readTableRows();
+    const symbols = Array.from(new Set(rows.map(r => r.symbol).filter(Boolean)));
+
+    if (symbols.length < 2) {
+        alert("Add at least two symbols in the portfolio table to run the frontier.");
+        return;
+    }
+
+    const btn = document.getElementById("frontierBtn");
+    const status = document.getElementById("frontierStatus");
+    setLoading(btn, true);
+    status.textContent = "Running simulations…";
+
+    try {
+        const res = await fetch(`${API_BASE}/portfolio/efficient_frontier`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(symbols)
+        });
+        const data = await res.json();
+
+        if (!Array.isArray(data) || !data.length) {
+            status.textContent = "No frontier points returned.";
+            return;
         }
-    });
 
-    btn.disabled = false;
-    btn.innerHTML = "Analyze";
+        const vols = data.map(p => p.volatility);
+        const rets = data.map(p => p.return);
+        const sharpes = data.map(p => p.sharpe_ratio);
+
+        const maxSharpeIndex = sharpes.indexOf(Math.max(...sharpes));
+        const minVolIndex = vols.indexOf(Math.min(...vols));
+
+        const allPoints = data.map((p, idx) => ({
+            x: p.volatility,
+            y: p.return,
+            sharpe: p.sharpe_ratio,
+            isMaxSharpe: idx === maxSharpeIndex,
+            isMinVol: idx === minVolIndex
+        }));
+
+        const canvas = document.getElementById("frontierChart");
+        canvas.style.display = "block";
+        if (frontierChart) frontierChart.destroy();
+
+        frontierChart = new Chart(canvas, {
+            type: "scatter",
+            data: {
+                datasets: [
+                    {
+                        label: "Portfolios",
+                        data: allPoints.map(p => ({ x: p.x, y: p.y })),
+                        backgroundColor: "rgba(59, 130, 246, 0.6)",
+                        pointRadius: 3
+                    },
+                    {
+                        label: "Max Sharpe",
+                        data: [{ x: allPoints[maxSharpeIndex].x, y: allPoints[maxSharpeIndex].y }],
+                        backgroundColor: "#22c55e",
+                        pointRadius: 5
+                    },
+                    {
+                        label: "Min Volatility",
+                        data: [{ x: allPoints[minVolIndex].x, y: allPoints[minVolIndex].y }],
+                        backgroundColor: "#f97316",
+                        pointRadius: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const x = ctx.parsed.x;
+                                const y = ctx.parsed.y;
+                                return `Vol: ${x.toFixed(3)}, Return: ${y.toFixed(3)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: "Volatility" },
+                        grid: { color: "rgba(148, 163, 184, 0.1)" },
+                        ticks: { color: "#64748b" }
+                    },
+                    y: {
+                        title: { display: true, text: "Expected Return" },
+                        grid: { color: "rgba(148, 163, 184, 0.1)" },
+                        ticks: { color: "#64748b" }
+                    }
+                }
+            }
+        });
+
+        status.textContent = `Simulated ${data.length} portfolios. Max Sharpe ${sharpes[maxSharpeIndex].toFixed(2)}, Min Vol ${vols[minVolIndex].toFixed(3)}.`;
+    } catch (e) {
+        status.textContent = "Failed to run efficient frontier. Check backend logs.";
+    } finally {
+        setLoading(btn, false);
+    }
 }
 
 async function calculatePortfolio() {
-
-    const btn = document.getElementById("calcBtn");
-    btn.disabled = true;
-    btn.innerHTML = "Calculating <span class='spinner'></span>";
-
     const rows = document.querySelectorAll("#portfolioTable tbody tr");
+    const btn = document.getElementById("calcBtn");
+    const output = document.getElementById("portfolioOutput");
 
-    let totalValue = 0;
+    setLoading(btn, true);
+    output.innerHTML = '<span class="loading">Calculating portfolio</span>';
+
+    let totalInvested = 0;
+    let totalCurrent = 0;
     let allocation = {};
+    let symbols = [];
+    let outputHtml = "";
 
-    for (let row of rows) {
+    try {
+        for (const row of rows) {
+            const symbol = row.cells[0].children[0].value.trim();
+            const qty = parseFloat(row.cells[1].children[0].value);
+            const avg = parseFloat(row.cells[2].children[0].value);
 
-        const symbol = row.cells[0].children[0].value;
-        const qty = parseFloat(row.cells[1].children[0].value);
-        const avg = parseFloat(row.cells[2].children[0].value);
+            if (!symbol || !qty || !avg) continue;
 
-        if (!symbol || !qty || !avg) continue;
+            const res = await fetch(`${API_BASE}/stocks/market-data?symbol=${symbol}`);
+            const data = await res.json();
 
-        const res = await fetch(`http://127.0.0.1:8000/stocks/market-data?symbol=${symbol}`);
-        const data = await res.json();
+            if (!data || data.length === 0) continue;
 
-        const currentPrice = data[data.length - 1].Close;
-        const value = currentPrice * qty;
+            const currentPrice = data[data.length - 1].Close;
 
-        totalValue += value;
-        allocation[symbol] = value;
-    }
+            const invested = qty * avg;
+            const current = qty * currentPrice;
+            const pnl = current - invested;
+            const returnPct = ((current / invested - 1) * 100).toFixed(2);
 
-    let output = "";
-    for (let sym in allocation) {
-        const weight = (allocation[sym] / totalValue * 100).toFixed(2);
-        output += `${sym}: ₹${allocation[sym].toFixed(2)} (${weight}%)<br>`;
-    }
+            totalInvested += invested;
+            totalCurrent += current;
+            allocation[symbol] = current;
+            if (!symbols.includes(symbol)) {
+                symbols.push(symbol);
+            }
 
-    document.getElementById("portfolioOutput").innerHTML = output;
-
-    if (allocationChart) allocationChart.destroy();
-
-    allocationChart = new Chart(document.getElementById("allocationChart"), {
-        type: "pie",
-        data: {
-            labels: Object.keys(allocation),
-            datasets: [{
-                data: Object.values(allocation),
-                backgroundColor: ["#3b82f6","#22c55e","#facc15","#ef4444","#a855f7"]
-            }]
+            const pnlClass = pnl >= 0 ? 'trend-up' : 'trend-down';
+            outputHtml += `
+                <div><b>${symbol}</b></div>
+                Invested: ₹${invested.toFixed(2)} · Current: ₹${current.toFixed(2)} · 
+                <span class="${pnlClass}">P&L: ₹${pnl.toFixed(2)} (${returnPct}%)</span>
+                <hr>
+            `;
         }
-    });
 
-    btn.disabled = false;
-    btn.innerHTML = "Calculate Portfolio";
+        const totalPnL = totalCurrent - totalInvested;
+        const totalReturn = totalInvested > 0
+            ? ((totalCurrent / totalInvested - 1) * 100).toFixed(2)
+            : 0;
+
+        const totalClass = totalPnL >= 0 ? 'trend-up' : 'trend-down';
+
+        outputHtml += `
+            <div style="margin-top:12px"><b>Total Invested:</b> ₹${totalInvested.toFixed(2)}</div>
+            <div><b>Total Current:</b> ₹${totalCurrent.toFixed(2)}</div>
+            <div class="${totalClass}" style="font-weight:600;margin-top:8px">
+                Total P&L: ₹${totalPnL.toFixed(2)} (${totalReturn}%)
+            </div>
+        `;
+
+        output.innerHTML = outputHtml || '<span class="placeholder-text">Add valid holdings to calculate</span>';
+
+        if (Object.keys(allocation).length > 0) {
+            const chartCanvas = document.getElementById("allocationChart");
+            const legendEl = document.getElementById("allocationLegend");
+            chartCanvas.style.display = "block";
+
+            if (allocationChart) allocationChart.destroy();
+
+            // Sort by allocation and group small names into OTHERS
+            const entries = Object.entries(allocation)
+                .map(([symbol, value]) => ({ symbol, value }))
+                .sort((a, b) => b.value - a.value);
+
+            const maxSlices = 8;
+            let displayEntries = entries.slice(0, maxSlices);
+
+            if (entries.length > maxSlices) {
+                const othersValue = entries
+                    .slice(maxSlices)
+                    .reduce((sum, e) => sum + e.value, 0);
+                displayEntries.push({ symbol: "OTHERS", value: othersValue, isOthers: true });
+            }
+
+            const labels = displayEntries.map(e => e.symbol);
+            const values = displayEntries.map(e => e.value);
+            const colors = displayEntries.map((e, idx) =>
+                e.isOthers ? "rgba(148, 163, 184, 0.85)" : ALLOCATION_COLORS[idx % ALLOCATION_COLORS.length]
+            );
+
+            allocationChart = new Chart(chartCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const label = ctx.label || '';
+                                    const value = ctx.raw || 0;
+                                    const pct = totalCurrent > 0
+                                        ? ((value / totalCurrent) * 100).toFixed(1)
+                                        : 0;
+                                    return `${label}: ₹${value.toFixed(0)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            legendEl.innerHTML = displayEntries.map((entry, idx) => {
+                const pct = totalCurrent > 0
+                    ? ((entry.value / totalCurrent) * 100).toFixed(1)
+                    : 0;
+                const color = colors[idx % colors.length];
+                return `
+                <div class="allocation-legend-item">
+                    <span class="allocation-color" style="background:${color}"></span>
+                    <span class="allocation-label">${entry.symbol}</span>
+                    <span style="font-size:0.8rem;color:var(--text-muted)">${pct}%</span>
+                </div>
+            `;
+            }).join('');
+        } else {
+            document.getElementById("allocationLegend").innerHTML =
+                '<span class="placeholder-text">Add holdings to see allocation</span>';
+        }
+
+        await updateAiRecommendation(symbols);
+    } catch (err) {
+        output.innerHTML = `<span style="color:var(--danger)">Failed to fetch data. Is the backend running?</span>`;
+    } finally {
+        setLoading(btn, false);
+    }
+}
+
+async function updateAiRecommendation(symbols) {
+    const aiBox = document.getElementById("aiRecommendation");
+
+    if (!symbols || symbols.length === 0) {
+        aiBox.innerHTML = '<span class="placeholder-text">Add holdings and calculate to get AI commentary</span>';
+        return;
+    }
+
+    aiBox.innerHTML = '<span class="loading">Asking portfolio strategist</span>';
+
+    try {
+        const res = await fetch(`${API_BASE}/portfolio/optimize_ai`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(symbols)
+        });
+
+        const data = await res.json();
+        const m = data.metrics || {};
+
+        aiBox.innerHTML = `
+            <div class="metrics-grid" style="margin-bottom:12px">
+                <div class="metric-item">
+                    <div class="metric-label">Portfolio Type</div>
+                    <div class="metric-value">${m.type || 'Max Sharpe Portfolio'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Expected Return</div>
+                    <div class="metric-value">${m.expected_return ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Volatility</div>
+                    <div class="metric-value">${m.volatility ?? 'N/A'}</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Sharpe Ratio</div>
+                    <div class="metric-value">${m.sharpe_ratio ?? 'N/A'}</div>
+                </div>
+            </div>
+            <hr>
+            <div>${data.explanation || 'No AI explanation returned.'}</div>
+        `;
+    } catch (err) {
+        aiBox.innerHTML = `<span style="color:var(--danger)">AI explanation unavailable. Is the LLM service running?</span>`;
+    }
 }
 
 </script>
