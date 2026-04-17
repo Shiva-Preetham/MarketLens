@@ -940,6 +940,84 @@ input[type="file"] { display: none; }
       </div>
     </div>
 
+    <!-- ML PREDICTION + SENTIMENT -->
+    <div id="predict" class="section">
+      <div class="page-header">
+        <div>
+          <div class="page-title">ML Prediction</div>
+          <div class="page-sub">5-DAY DIRECTION · NEWS SENTIMENT · FEATURE IMPORTANCE</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Prediction Workspace</span>
+        </div>
+        <div class="search-group">
+          <div class="input-wrap" style="max-width:320px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="mlSymbol" placeholder="RELIANCE.NS · AAPL · INFY.NS" class="has-icon">
+          </div>
+          <button class="btn btn-primary" id="mlPredictBtn" onclick="runMLPredict()">Predict</button>
+          <button class="btn btn-ghost" id="mlSentimentBtn" onclick="runSentimentAnalysis()">Sentiment</button>
+          <button class="btn btn-ghost" id="mlTrainBtn" onclick="runMLTrain()">Retrain</button>
+        </div>
+        <div id="mlStatus" class="placeholder" style="margin-top:12px">
+          Enter a ticker to run market sentiment and ML prediction.
+        </div>
+      </div>
+
+      <div class="card" id="mlSentimentCard" style="display:none">
+        <div class="card-header">
+          <span class="card-title">News Sentiment Analysis</span>
+          <span class="badge badge-gray" id="mlSentimentSignal">NEUTRAL</span>
+        </div>
+        <div id="mlSentimentMetrics" class="metrics-row"></div>
+        <div class="divider"></div>
+        <div id="mlSentimentHeadlines"></div>
+      </div>
+
+      <div class="card" id="mlSignalCard" style="display:none">
+        <div class="card-header">
+          <span class="card-title">Prediction Signal</span>
+          <span class="badge badge-gray" id="mlTrainedAt"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div>
+            <div id="mlSignalLabel" style="font-family:var(--display);font-size:1.65rem;font-weight:700;letter-spacing:-0.03em">--</div>
+            <div id="mlConfidence" class="page-sub" style="margin-top:8px">Waiting for prediction</div>
+          </div>
+          <div class="metrics-row" style="min-width:320px;flex:1;margin-top:0">
+            <div class="metric-box"><div class="metric-label">RF Probability</div><div class="metric-value" id="mlRfProb">--</div></div>
+            <div class="metric-box"><div class="metric-label">XGB Probability</div><div class="metric-value" id="mlXgbProb">--</div></div>
+            <div class="metric-box"><div class="metric-label">Bullish Prob.</div><div class="metric-value" id="mlEnsembleProb">--</div></div>
+            <div class="metric-box"><div class="metric-label">Model Sentiment</div><div class="metric-value" id="mlSentiment">--</div></div>
+            <div class="metric-box"><div class="metric-label">Accuracy</div><div class="metric-value" id="mlAccuracy">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="mlBarCard" style="display:none">
+        <div class="card-header"><span class="card-title">Probability Bar</span></div>
+        <div style="height:14px;background:var(--surface2);border-radius:999px;overflow:hidden">
+          <div id="mlConfBar" style="height:100%;width:0%;transition:width 0.35s ease"></div>
+        </div>
+        <div id="mlConfBarLabel" class="page-sub" style="margin-top:10px">Waiting for probability</div>
+      </div>
+
+      <div class="card" id="mlFeatCard" style="display:none">
+        <div class="card-header"><span class="card-title">Latest Feature Snapshot</span></div>
+        <div id="mlFeatures" class="metrics-row"></div>
+      </div>
+
+      <div class="card" id="mlInfoCard" style="display:none">
+        <div class="card-header"><span class="card-title">Model Diagnostics</span></div>
+        <div id="mlModelMetrics" class="metrics-row"></div>
+        <div class="divider"></div>
+        <div id="mlImportanceChart" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -1392,6 +1470,72 @@ function addToPortfolioFromWatchlist(symbol) {
 
 // ── ML PREDICTION ──────────────────────────────────────────────
 
+async function runSentimentAnalysis(symbolArg, silent = false) {
+  const symbol = (symbolArg || document.getElementById("mlSymbol").value || "").trim();
+  if (!symbol) { alert("Enter a symbol."); return; }
+
+  const btn = document.getElementById("mlSentimentBtn");
+  const status = document.getElementById("mlStatus");
+  const card = document.getElementById("mlSentimentCard");
+  const badge = document.getElementById("mlSentimentSignal");
+  const metrics = document.getElementById("mlSentimentMetrics");
+  const headlines = document.getElementById("mlSentimentHeadlines");
+
+  if (!silent) setLoading(btn, true);
+  status.textContent = "Running news sentiment analysis...";
+  card.style.display = "block";
+  metrics.innerHTML = "";
+  headlines.innerHTML = '<span class="loader">Fetching headlines</span>';
+
+  try {
+    const res = await fetch(`${API_BASE}/intelligence/${encodeURIComponent(symbol)}`);
+    const data = await res.json();
+    const signal = (data.signal || "neutral").toUpperCase();
+    const score = Number(data.sentiment_score || 0);
+    const badgeClass = signal === "BULLISH" ? "badge-green" : signal === "BEARISH" ? "badge-red" : "badge-gray";
+
+    badge.className = `badge ${badgeClass}`;
+    badge.textContent = signal;
+    metrics.innerHTML = [
+      ["News Count", data.news_count ?? 0],
+      ["Sentiment", score.toFixed(3)],
+      ["Positive", data.sentiment_breakdown?.positive ?? 0],
+      ["Neutral", data.sentiment_breakdown?.neutral ?? 0],
+      ["Negative", data.sentiment_breakdown?.negative ?? 0],
+    ].map(([label, value]) => `<div class="metric-box"><div class="metric-label">${label}</div><div class="metric-value">${value}</div></div>`).join("");
+
+    const items = data.headlines || [];
+    if (!items.length) {
+      headlines.innerHTML = '<span class="placeholder">No recent headlines returned for this ticker.</span>';
+    } else {
+      headlines.innerHTML = items.map(item => {
+        const label = item.sentiment_label || "neutral";
+        const labelClass = label === "positive" ? "badge-green" : label === "negative" ? "badge-red" : "badge-gray";
+        const title = item.link
+          ? `<a href="${item.link}" target="_blank" rel="noreferrer" style="color:var(--text);text-decoration:none">${item.title}</a>`
+          : `<span style="color:var(--text)">${item.title}</span>`;
+        return `
+          <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start">
+              <div style="font-size:0.9rem;line-height:1.6">${title}</div>
+              <span class="badge ${labelClass}" style="flex-shrink:0">${label} · ${Number(item.sentiment_score || 0).toFixed(3)}</span>
+            </div>
+            <div style="margin-top:8px;font-family:var(--mono);font-size:0.68rem;color:var(--text3)">
+              ${item.publisher || "unknown"}${item.published_at ? ` · ${new Date(item.published_at).toLocaleString()}` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+    status.textContent = silent ? "" : `Loaded ${data.news_count || 0} headline(s) for ${data.symbol || symbol.toUpperCase()}.`;
+  } catch(e) {
+    status.textContent = "Failed to run sentiment analysis: " + e.message;
+    headlines.innerHTML = `<span style="color:var(--red)">Sentiment analysis unavailable.</span>`;
+  } finally {
+    if (!silent) setLoading(btn, false);
+  }
+}
+
 async function runMLPredict() {
   const symbol = document.getElementById("mlSymbol").value.trim();
   if (!symbol) { alert("Enter a symbol."); return; }
@@ -1406,6 +1550,7 @@ async function runMLPredict() {
     if (data.status === "error") { status.textContent = "Error: " + data.detail; return; }
     renderMLResult(data);
     status.textContent = "";
+    await runSentimentAnalysis(symbol, true);
     // Also load model info
     await loadMLInfo(symbol);
   } catch(e) {

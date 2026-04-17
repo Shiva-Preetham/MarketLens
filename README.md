@@ -1,85 +1,56 @@
 # MarketLens Intelligence
 
-MarketLens is being upgraded from a stock-analysis prototype into an internship-ready **Market Intelligence + News Sentiment + ML Prediction** project.
+MarketLens is a **Market Intelligence + News Sentiment + ML Prediction** platform for stock analysis.
 
-The project is designed to help demonstrate:
-- Python backend engineering
-- SQL and data modeling fundamentals
-- API design with FastAPI
-- market data processing
+It combines:
+- live market data
+- risk and technical analysis
 - news sentiment analysis
-- interpretable ML prediction
-- dashboard-ready outputs for BI tools like Power BI
+- 5-day market direction prediction
+- dashboard-ready API responses
 
-## Why This Project Matters
+## Product Flow
 
-This repo is aimed at internship applications for analytics, data, and ML-focused roles. The product story is simple:
+1. Fetch market data for a ticker.
+2. Calculate risk and technical metrics.
+3. Fetch recent news headlines.
+4. Convert headlines into sentiment signals.
+5. Run the ML prediction pipeline.
+6. Show results in the existing frontend dashboard.
 
-1. pull market data
-2. pull recent news metadata
-3. turn headlines into a sentiment signal
-4. combine quantitative features with ML prediction
-5. expose everything through clean APIs that a dashboard can consume
+## Current Features
 
-## Current Phase
-
-Phase 1 has been implemented in this repo:
-- improved backend startup reliability with a default local SQLite database fallback
-- wired the existing ML prediction router into the FastAPI app
-- added `/health` for quick API verification
-- added `/intelligence/{ticker}` for market-intelligence and news-sentiment summaries
-- added a clean demo page at [frontend/internship_demo.html](C:/Users/shiva/Desktop/MarketLens/frontend/internship_demo.html)
+- FastAPI backend
+- SQLAlchemy database layer
+- SQLite fallback for simple local runs
+- stock watchlist APIs
+- market data APIs using `yfinance`
+- risk metrics and quant analysis
+- news sentiment endpoint at `/intelligence/{ticker}`
+- ML prediction endpoints at `/predict/{ticker}`
+- integrated ML Prediction + Sentiment section inside `frontend/index.html`
 
 ## Project Architecture
 
 ### Backend
 - `backend/app/main.py`
-  - app entrypoint and router registration
+  - FastAPI app setup and router registration
 - `backend/app/routes/`
   - API endpoints for stocks, analysis, portfolio, prediction, and intelligence
 - `backend/app/services/`
-  - business logic for market data, news sentiment, ML, and portfolio workflows
+  - service logic for market data, sentiment, ML, and portfolio workflows
 - `backend/app/quant/`
-  - feature engineering, indicators, portfolio math, and ML model code
+  - indicators, features, risk logic, portfolio math, and ML model code
 
 ### Frontend
 - `frontend/index.html`
-  - legacy UI prototype
-- `frontend/internship_demo.html`
-  - cleaner phase-1 demo page for intelligence and prediction
+  - main dashboard UI with stock analysis, portfolio, watchlist, ML prediction, and news sentiment
 
 ### Docs
-- [docs/project_blueprint.md](C:/Users/shiva/Desktop/MarketLens/docs/project_blueprint.md)
-  - audit, architecture, roadmap, interview framing
-- [docs/application_positioning.md](C:/Users/shiva/Desktop/MarketLens/docs/application_positioning.md)
-  - project title, resume bullets, README plan, LinkedIn summary, talking points
-
-## Phase Roadmap
-
-### Phase 1: Foundation + Market Intelligence
-- reliable backend startup
-- health endpoint
-- news headline sentiment endpoint
-- visible demo page
-
-### Phase 2: Better Data Product
-- store market and news snapshots in a warehouse-style schema
-- add richer feature tables
-- create dashboard-ready endpoints and extracts
-- improve frontend experience
-
-### Phase 3: Stronger ML
-- evaluate baseline vs tree-based models
-- add better validation and diagnostics
-- upgrade sentiment to FinBERT
-- connect sentiment features into the prediction pipeline more explicitly
-
-### Phase 4: Deployment + Resume Polish
-- Docker setup
-- CI checks
-- observability basics
-- Power BI dashboard
-- final README and demo assets
+- `docs/project_blueprint.md`
+  - architecture and phase roadmap
+- `docs/application_positioning.md`
+  - project positioning, resume bullets, and LinkedIn description
 
 ## Local Run
 
@@ -89,8 +60,14 @@ cd backend
 uvicorn app.main:app --reload
 ```
 
-### Demo Frontend
-Open [frontend/internship_demo.html](C:/Users/shiva/Desktop/MarketLens/frontend/internship_demo.html) in a browser after the backend is running.
+### Frontend
+Open:
+
+```text
+frontend/index.html
+```
+
+Then go to the **ML Predict** tab.
 
 ## Key Endpoints
 
@@ -104,12 +81,10 @@ Open [frontend/internship_demo.html](C:/Users/shiva/Desktop/MarketLens/frontend/
 - `/predict/{ticker}/train`
 - `/predict/{ticker}/info`
 
-## How To Explain It In Interviews
+## Next Planned Improvements
 
-Short version:
-
-> I built a market intelligence platform that combines price-based analysis, headline sentiment, and an ML prediction API. I focused on turning raw finance data into clean backend services and dashboard-ready outputs rather than only training a model in a notebook.
-
-For a deeper breakdown, use:
-- [docs/project_blueprint.md](C:/Users/shiva/Desktop/MarketLens/docs/project_blueprint.md)
-- [docs/application_positioning.md](C:/Users/shiva/Desktop/MarketLens/docs/application_positioning.md)
+- persist sentiment snapshots in the database
+- export dashboard-ready datasets
+- upgrade sentiment scoring to FinBERT
+- add Docker setup
+- add Power BI dashboard outputs

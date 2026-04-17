@@ -13,7 +13,7 @@ app = FastAPI(
     title="MarketLens API",
     version="0.2.0",
     description=(
-        "Internship-ready market intelligence backend with quant analysis, "
+        "Market intelligence backend with quant analysis, "
         "news sentiment, watchlists, and ML prediction endpoints."
     ),
 )

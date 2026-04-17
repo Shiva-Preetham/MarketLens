@@ -16,6 +16,6 @@ def get_market_intelligence(
     Phase 1 is intentionally practical:
     - fetch recent ticker news metadata
     - score headlines with free sentiment logic
-    - return a UI-friendly summary for dashboards and interview demos
+    - return a UI-friendly summary for dashboards and product screens
     """
     return build_market_intelligence(ticker, limit=limit)
