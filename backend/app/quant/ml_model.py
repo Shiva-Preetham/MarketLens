@@ -66,6 +66,8 @@ class PredictResult:
     horizon:          str       # "5-day"
     sentiment_score:  float
     feature_snapshot: dict      # latest feature values for display
+    shap_explanation: list      # local feature contributions for this prediction
+    explanation_model: str
     model_accuracy:   float
     trained_at:       str
 
@@ -90,6 +92,77 @@ def _imports():
             TimeSeriesSplit, cross_val_score,
             accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
             CalibratedClassifierCV, XGBClassifier, xgb_available)
+
+
+def _extract_tree_model_for_explanation(ensemble):
+    if hasattr(ensemble, "named_estimators_"):
+        if "xgb" in ensemble.named_estimators_:
+            return ensemble.named_estimators_["xgb"], "XGBoost SHAP"
+        if "rf" in ensemble.named_estimators_:
+            return ensemble.named_estimators_["rf"], "Random Forest SHAP"
+
+    if hasattr(ensemble, "estimator"):
+        return ensemble.estimator, "Random Forest SHAP"
+
+    return ensemble, "Tree SHAP"
+
+
+def _fallback_feature_contributions(model, feats: list, row: pd.Series) -> list:
+    importances = getattr(model, "feature_importances_", None)
+    if importances is None:
+        return []
+
+    top_idx = np.argsort(importances)[::-1][:8]
+    return [
+        {
+            "feature": feats[i],
+            "feature_value": round(float(row.get(feats[i], 0.0)), 4),
+            "shap_value": round(float(importances[i]), 6),
+            "impact": "important feature",
+            "method": "feature_importance_fallback",
+        }
+        for i in top_idx
+    ]
+
+
+def _shap_explanation(ensemble, feats: list, latest_scaled: np.ndarray, row: pd.Series) -> tuple[list, str]:
+    model, model_name = _extract_tree_model_for_explanation(ensemble)
+
+    try:
+        import shap
+
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(latest_scaled)
+
+        if isinstance(shap_values, list):
+            values = np.asarray(shap_values[1] if len(shap_values) > 1 else shap_values[0])
+        else:
+            values = np.asarray(shap_values)
+
+        if values.ndim == 3:
+            class_idx = 1 if values.shape[2] > 1 else 0
+            values = values[0, :, class_idx]
+        elif values.ndim == 2:
+            values = values[0]
+        else:
+            values = values.reshape(-1)
+
+        top_idx = np.argsort(np.abs(values))[::-1][:8]
+        explanation = []
+        for i in top_idx:
+            shap_value = float(values[i])
+            explanation.append(
+                {
+                    "feature": feats[i],
+                    "feature_value": round(float(row.get(feats[i], 0.0)), 4),
+                    "shap_value": round(shap_value, 6),
+                    "impact": "pushes bullish" if shap_value > 0 else "pushes bearish" if shap_value < 0 else "neutral",
+                    "method": "shap",
+                }
+            )
+        return explanation, model_name
+    except Exception:
+        return _fallback_feature_contributions(model, feats, row), f"{model_name} unavailable"
 
 
 # ─────────────────────────────────────────────
@@ -268,6 +341,8 @@ def predict(symbol: str, retrain_if_missing: bool = True) -> PredictResult:
         if col in row.index:
             snapshot[col] = round(float(row[col]), 4)
 
+    shap_values, explanation_model = _shap_explanation(ensemble, feats, latest_scaled, row)
+
     return PredictResult(
         symbol          = symbol,
         signal          = "BULLISH" if bull_prob >= 0.5 else "BEARISH",
@@ -277,6 +352,8 @@ def predict(symbol: str, retrain_if_missing: bool = True) -> PredictResult:
         horizon         = "5-day",
         sentiment_score = round(sentiment, 3),
         feature_snapshot= snapshot,
+        shap_explanation= shap_values,
+        explanation_model= explanation_model,
         model_accuracy  = meta.get("accuracy", 0.0),
         trained_at      = meta.get("trained_at", ""),
     )

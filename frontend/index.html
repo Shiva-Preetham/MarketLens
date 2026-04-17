@@ -967,6 +967,28 @@ input[type="file"] { display: none; }
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-header"><span class="card-title">How To Read This Panel</span></div>
+        <div class="metrics-row">
+          <div class="metric-box">
+            <div class="metric-label">RF</div>
+            <div class="metric-value" style="font-size:0.9rem;line-height:1.5">Random Forest baseline</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">XGB</div>
+            <div class="metric-value" style="font-size:0.9rem;line-height:1.5">XGBoost main signal</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">SHAP</div>
+            <div class="metric-value" style="font-size:0.9rem;line-height:1.5">Feature impact for this prediction</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Sentiment</div>
+            <div class="metric-value" style="font-size:0.9rem;line-height:1.5">News headline signal</div>
+          </div>
+        </div>
+      </div>
+
       <div class="card" id="mlSentimentCard" style="display:none">
         <div class="card-header">
           <span class="card-title">News Sentiment Analysis</span>
@@ -1008,6 +1030,14 @@ input[type="file"] { display: none; }
       <div class="card" id="mlFeatCard" style="display:none">
         <div class="card-header"><span class="card-title">Latest Feature Snapshot</span></div>
         <div id="mlFeatures" class="metrics-row"></div>
+      </div>
+
+      <div class="card" id="mlShapCard" style="display:none">
+        <div class="card-header">
+          <span class="card-title">SHAP Explanation</span>
+          <span class="badge badge-gray" id="mlShapModel">TREE SHAP</span>
+        </div>
+        <div id="mlShapChart" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
 
       <div class="card" id="mlInfoCard" style="display:none">
@@ -1146,6 +1176,16 @@ function deleteSelectedBookmark() {
 function setLoading(el, loading) {
   if (loading) { el.disabled = true; el.dataset.text = el.textContent; el.innerHTML = '<span class="loader">Loading</span>'; }
   else { el.disabled = false; el.textContent = el.dataset.text || el.textContent; }
+}
+
+function cleanDisplayText(value, fallback = "unknown") {
+  if (value === null || value === undefined || value === "") return fallback;
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(v => cleanDisplayText(v, "")).filter(Boolean).join(", ") || fallback;
+  if (typeof value === "object") {
+    return cleanDisplayText(value.displayName || value.name || value.providerName || value.publisher || value.title || value.url, fallback);
+  }
+  return String(value);
 }
 
 // ── LIVE MARKET INDICES ──
@@ -1511,9 +1551,11 @@ async function runSentimentAnalysis(symbolArg, silent = false) {
       headlines.innerHTML = items.map(item => {
         const label = item.sentiment_label || "neutral";
         const labelClass = label === "positive" ? "badge-green" : label === "negative" ? "badge-red" : "badge-gray";
+        const publisher = cleanDisplayText(item.publisher);
+        const titleText = cleanDisplayText(item.title, "Untitled headline");
         const title = item.link
-          ? `<a href="${item.link}" target="_blank" rel="noreferrer" style="color:var(--text);text-decoration:none">${item.title}</a>`
-          : `<span style="color:var(--text)">${item.title}</span>`;
+          ? `<a href="${item.link}" target="_blank" rel="noreferrer" style="color:var(--text);text-decoration:none">${titleText}</a>`
+          : `<span style="color:var(--text)">${titleText}</span>`;
         return `
           <div style="padding:12px 0;border-bottom:1px solid var(--border)">
             <div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start">
@@ -1521,7 +1563,7 @@ async function runSentimentAnalysis(symbolArg, silent = false) {
               <span class="badge ${labelClass}" style="flex-shrink:0">${label} · ${Number(item.sentiment_score || 0).toFixed(3)}</span>
             </div>
             <div style="margin-top:8px;font-family:var(--mono);font-size:0.68rem;color:var(--text3)">
-              ${item.publisher || "unknown"}${item.published_at ? ` · ${new Date(item.published_at).toLocaleString()}` : ""}
+              ${publisher}${item.published_at ? ` · ${new Date(item.published_at).toLocaleString()}` : ""}
             </div>
           </div>
         `;
@@ -1588,7 +1630,7 @@ async function loadMLInfo(symbol) {
 }
 
 function hideMLCards() {
-  ["mlSignalCard","mlBarCard","mlFeatCard","mlInfoCard"].forEach(id => {
+  ["mlSignalCard","mlBarCard","mlFeatCard","mlShapCard","mlInfoCard"].forEach(id => {
     document.getElementById(id).style.display = "none";
   });
 }
@@ -1616,6 +1658,7 @@ function renderMLResult(data) {
   sentEl.textContent = sent > 0.1 ? `+${sent.toFixed(3)} 😊` : sent < -0.1 ? `${sent.toFixed(3)} 😟` : `${sent.toFixed(3)} 😐`;
   sentEl.style.color = sent > 0.05 ? "var(--green)" : sent < -0.05 ? "var(--red)" : "var(--text2)";
 
+  sentEl.textContent = sent > 0.1 ? `+${sent.toFixed(3)} positive` : sent < -0.1 ? `${sent.toFixed(3)} negative` : `${sent.toFixed(3)} neutral`;
   document.getElementById("mlAccuracy").textContent = (data.model_accuracy * 100).toFixed(1) + "%";
   document.getElementById("mlTrainedAt").textContent = data.trained_at ? "Trained " + new Date(data.trained_at).toLocaleDateString() : "";
 
@@ -1633,6 +1676,38 @@ function renderMLResult(data) {
       `<div class="metric-box"><div class="metric-label">${k.replace(/_/g," ")}</div><div class="metric-value" style="font-size:0.95rem">${v}</div></div>`
     ).join("");
   }
+  renderShapExplanation(data);
+}
+
+function renderShapExplanation(data) {
+  const shap = data.shap_explanation || [];
+  if (!shap.length) return;
+
+  const card = document.getElementById("mlShapCard");
+  const model = document.getElementById("mlShapModel");
+  const chart = document.getElementById("mlShapChart");
+  const maxAbs = Math.max(...shap.map(item => Math.abs(Number(item.shap_value || 0))), 0.000001);
+
+  card.style.display = "block";
+  model.textContent = data.explanation_model || "TREE SHAP";
+  chart.innerHTML = shap.map(item => {
+    const value = Number(item.shap_value || 0);
+    const width = Math.max(4, Math.abs(value) / maxAbs * 100);
+    const isFallback = item.method && item.method !== "shap";
+    const isBullish = value >= 0;
+    const color = isFallback ? "var(--gold)" : isBullish ? "var(--green)" : "var(--red)";
+    const label = cleanDisplayText(item.feature, "feature").replace(/_/g, " ");
+    const impact = cleanDisplayText(item.impact, isBullish ? "pushes bullish" : "pushes bearish");
+    return `
+      <div style="display:grid;grid-template-columns:170px 1fr 120px;gap:12px;align-items:center">
+        <span style="font-family:var(--mono);font-size:0.72rem;color:var(--text2)">${label}</span>
+        <div style="height:8px;background:var(--surface2);border-radius:999px;overflow:hidden">
+          <div style="height:100%;width:${width.toFixed(1)}%;background:${color};border-radius:999px"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:0.68rem;color:${color};text-align:right">${impact} · ${value.toFixed(4)}</span>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderMLInfo(data) {

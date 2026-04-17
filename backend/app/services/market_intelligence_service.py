@@ -45,14 +45,53 @@ NEGATIVE_WORDS = {
 }
 
 
-def _safe_datetime_from_epoch(raw_value) -> str | None:
+def _safe_datetime(raw_value) -> str | None:
     if raw_value in (None, ""):
         return None
+
+    if isinstance(raw_value, str):
+        try:
+            return datetime.fromisoformat(raw_value.replace("Z", "+00:00")).isoformat()
+        except Exception:
+            return raw_value
 
     try:
         return datetime.fromtimestamp(int(raw_value), tz=timezone.utc).isoformat()
     except Exception:
         return None
+
+
+def _text_from(value, default: str = "unknown") -> str:
+    if value in (None, ""):
+        return default
+
+    if isinstance(value, dict):
+        for key in ("displayName", "name", "providerName", "publisher", "title", "url"):
+            nested = value.get(key)
+            if nested not in (None, ""):
+                return _text_from(nested, default)
+        return default
+
+    if isinstance(value, list):
+        cleaned = [_text_from(item, "") for item in value]
+        cleaned = [item for item in cleaned if item]
+        return ", ".join(cleaned) if cleaned else default
+
+    return str(value)
+
+
+def _url_from(value) -> str | None:
+    if value in (None, ""):
+        return None
+
+    if isinstance(value, dict):
+        for key in ("url", "href", "link"):
+            nested = value.get(key)
+            if nested not in (None, ""):
+                return _url_from(nested)
+        return None
+
+    return str(value)
 
 
 def _score_headline(headline: str) -> tuple[float, str]:
@@ -75,11 +114,12 @@ def _score_headline(headline: str) -> tuple[float, str]:
 
 def _extract_headline(item: dict) -> dict:
     content = item.get("content") or {}
-    title = content.get("title") or item.get("title") or ""
-    publisher = content.get("provider") or item.get("publisher") or "unknown"
-    link = content.get("canonicalUrl", {}).get("url") or item.get("link")
-    published_at = _safe_datetime_from_epoch(
+    title = _text_from(content.get("title") or item.get("title"), default="")
+    publisher = _text_from(content.get("provider") or item.get("publisher"))
+    link = _url_from(content.get("canonicalUrl") or item.get("link"))
+    published_at = _safe_datetime(
         content.get("pubDate")
+        or content.get("displayTime")
         or item.get("providerPublishTime")
         or item.get("published_at")
     )
