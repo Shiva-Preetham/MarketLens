@@ -1,13 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine
+
 from app import models
-
-from app.routes.stocks import router as stocks_router
+from app.database import engine
 from app.routes.analyze import router as analyze_router
+from app.routes.intelligence import router as intelligence_router
 from app.routes.portfolio import router as portfolio_router
+from app.routes.predict import router as predict_router
+from app.routes.stocks import router as stocks_router
 
-app = FastAPI()
+app = FastAPI(
+    title="MarketLens API",
+    version="0.2.0",
+    description=(
+        "Internship-ready market intelligence backend with quant analysis, "
+        "news sentiment, watchlists, and ML prediction endpoints."
+    ),
+)
 
 # Middleware
 app.add_middleware(
@@ -21,12 +30,32 @@ app.add_middleware(
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
-# Root endpoint
+
 @app.get("/")
 def root():
-    return {"message": "MarketLens Backend Running 🚀"}
+    return {
+        "message": "MarketLens API is running",
+        "product": "MarketLens Intelligence",
+        "version": app.version,
+        "docs": "/docs",
+        "capabilities": [
+            "stock analysis",
+            "market data",
+            "watchlist storage",
+            "news sentiment intelligence",
+            "5-day ML prediction",
+        ],
+    }
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "database": "connected", "version": app.version}
+
 
 # Register routers
 app.include_router(stocks_router)
 app.include_router(analyze_router)
+app.include_router(intelligence_router)
 app.include_router(portfolio_router)
+app.include_router(predict_router)
