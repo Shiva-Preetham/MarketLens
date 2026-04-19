@@ -1,0 +1,12 @@
+{
+  "name": "marketlens-frontend",
+  "version": "1.0.0",
+  "description": "MarketLens Intelligence Dashboard Frontend",
+  "private": true,
+  "scripts": {
+    "dev": "python -m http.server 8000"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
