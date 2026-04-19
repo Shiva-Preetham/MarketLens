@@ -1,7 +1,18 @@
+import os
+
 import requests
 
 
 def explain_portfolio_local(metrics: dict):
+    ollama_url = os.getenv("OLLAMA_URL")
+    ollama_model = os.getenv("OLLAMA_MODEL", "qwen3:4b")
+
+    # Hosted deployments generally do not have a local Ollama daemon.
+    if os.getenv("PORT") and not ollama_url:
+        return "AI explanation unavailable: OLLAMA_URL is not configured for this deployment."
+
+    ollama_url = ollama_url or "http://localhost:11434/api/generate"
+
     prompt = f"""
 You are a senior quantitative portfolio strategist.
 
@@ -28,14 +39,14 @@ Structure your response as:
 
     try:
         response = requests.post(
-            "http://localhost:11434/api/generate",
+            ollama_url,
             json={
-                "model": "qwen3:4b",
+                "model": ollama_model,
                 "prompt": prompt,
                 "stream": False,
                 "temperature": 0.3   # more analytical, less creative
             },
-            timeout=61
+            timeout=20
         )
 
         response.raise_for_status()
