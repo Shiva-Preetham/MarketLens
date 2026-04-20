@@ -1,90 +1,72 @@
-# MarketLens Intelligence
+# Project Blueprint
 
-MarketLens is a **Market Intelligence + News Sentiment + ML Prediction** platform for stock analysis.
+## Product Goal
 
-It combines:
-- live market data
-- risk and technical analysis
-- news sentiment analysis
-- 5-day market direction prediction
-- dashboard-ready API responses
+MarketLens is a market intelligence platform that combines stock analysis, news sentiment, and ML prediction in one dashboard.
 
-## Product Flow
-
-1. Fetch market data for a ticker.
-2. Calculate risk and technical metrics.
-3. Fetch recent news headlines.
-4. Convert headlines into sentiment signals.
-5. Run the ML prediction pipeline.
-6. Show results in the existing frontend dashboard.
-
-## Current Features
+## Existing Strengths
 
 - FastAPI backend
-- SQLAlchemy database layer
-- SQLite fallback for simple local runs
-- stock watchlist APIs
-- market data APIs using `yfinance`
-- risk metrics and quant analysis
-- news sentiment endpoint at `/intelligence/{ticker}`
-- ML prediction endpoints at `/predict/{ticker}`
-- integrated ML Prediction + Sentiment section inside `frontend/index.html`
+- stock and risk metric endpoints
+- watchlist storage
+- portfolio utilities
+- feature engineering for market prediction
+- Random Forest + XGBoost prediction pipeline
 
-## Project Architecture
+## Gaps Being Fixed
 
-### Backend
-- `backend/app/main.py`
-  - FastAPI app setup and router registration
-- `backend/app/routes/`
-  - API endpoints for stocks, analysis, portfolio, prediction, and intelligence
-- `backend/app/services/`
-  - service logic for market data, sentiment, ML, and portfolio workflows
-- `backend/app/quant/`
-  - indicators, features, risk logic, portfolio math, and ML model code
+- sentiment analysis needs to be visible in the main frontend
+- prediction endpoints need to be easier to access from the UI
+- news sentiment should become a first-class data feature
+- future dashboard exports should be structured for Power BI
+
+## Current Architecture
 
 ### Frontend
 - `frontend/index.html`
-  - main dashboard UI with stock analysis, portfolio, watchlist, ML prediction, and news sentiment
-
-### Docs
-- `docs/project_blueprint.md`
-  - architecture and phase roadmap
-- `docs/application_positioning.md`
-  - project positioning, resume bullets, and LinkedIn description
-
-## Local Run
+  - main UI for stock analysis, portfolio, watchlist, sentiment analysis, and ML prediction
 
 ### Backend
-```bash
-cd backend
-uvicorn app.main:app --reload
-```
+- `backend/app/main.py`
+  - FastAPI app and router registration
+- `backend/app/routes/intelligence.py`
+  - sentiment endpoint
+- `backend/app/services/market_intelligence_service.py`
+  - headline scoring and sentiment aggregation
+- `backend/app/quant/ml_model.py`
+  - tree-based prediction model
+- `backend/app/quant/features.py`
+  - technical, macro, and sentiment features
 
-### Frontend
-Open:
+## Phase Roadmap
 
-```text
-frontend/index.html
-```
+### Phase 1: Main UI Integration
+- add sentiment analysis under the existing ML Prediction tab
+- keep existing dashboard, portfolio, and watchlist behavior unchanged
+- remove separate demo frontend
 
-Then go to the **ML Predict** tab.
+### Phase 2: Persistent Data Layer
+- store news articles
+- store sentiment snapshots
+- store prediction runs
+- create analytical tables for dashboarding
 
-## Key Endpoints
+### Phase 3: Better Sentiment Model
+- replace lightweight scoring with FinBERT
+- compare sentiment score changes over time
+- connect sentiment aggregates into the ML feature set more explicitly
 
-- `/`
-- `/health`
-- `/analyze/{ticker}`
-- `/stocks/market-data?symbol=...`
-- `/stocks/risk-metrics?symbol=...`
-- `/intelligence/{ticker}`
-- `/predict/{ticker}`
-- `/predict/{ticker}/train`
-- `/predict/{ticker}/info`
+### Phase 4: Dashboard And Deployment
+- add Docker
+- create dashboard-ready exports
+- build Power BI reports
+- add basic monitoring/logging
 
-## Next Planned Improvements
+## Tool Choices
 
-- persist sentiment snapshots in the database
-- export dashboard-ready datasets
-- upgrade sentiment scoring to FinBERT
-- add Docker setup
-- add Power BI dashboard outputs
+- FastAPI for APIs
+- SQLAlchemy for database access
+- yfinance for market data and available news metadata
+- scikit-learn and XGBoost for ML prediction
+- lightweight sentiment scoring now, FinBERT later
+- Power BI later for business-facing dashboards
