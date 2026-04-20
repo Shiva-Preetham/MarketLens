@@ -74,3 +74,8 @@ MarketLens is a market intelligence platform that combines stock analysis, news 
 Built by Shiva Preetham
 
 This project is for educational and portfolio purposes.
+## Author
+Shiva Preetham
+
+## License
+This project is licensed under the MIT License.
