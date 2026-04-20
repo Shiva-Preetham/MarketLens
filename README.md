@@ -70,3 +70,7 @@ MarketLens is a market intelligence platform that combines stock analysis, news 
 - scikit-learn and XGBoost for ML prediction
 - lightweight sentiment scoring now, FinBERT later
 - Power BI later for business-facing dashboards
+
+Built by Shiva Preetham
+
+This project is for educational and portfolio purposes.
