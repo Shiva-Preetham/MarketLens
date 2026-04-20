@@ -200,21 +200,23 @@ def train(symbol: str, period: str = "2y") -> ModelResult:
     # ── Models ──
     rf = RandomForestClassifier(
         n_estimators=300,
-        max_depth=8,
-        min_samples_leaf=5,
+        max_depth=6,
+        min_samples_leaf=10,
         max_features="sqrt",
         class_weight="balanced",
         random_state=42,
         n_jobs=-1,
     )
+    pos_weight = (len(y_train) - y_train.sum()) / (y_train.sum() + 1e-9)
 
     if xgb_available:
         xgb = XGBClassifier(
             n_estimators=300,
-            max_depth=5,
+            max_depth=4,
             learning_rate=0.05,
             subsample=0.8,
             colsample_bytree=0.8,
+            scale_pos_weight=pos_weight,
             use_label_encoder=False,
             eval_metric="logloss",
             random_state=42,
@@ -243,7 +245,7 @@ def train(symbol: str, period: str = "2y") -> ModelResult:
 
     # Time-series cross-validation on full set
     tscv    = TimeSeriesSplit(n_splits=5)
-    cv_scrs = cross_val_score(ensemble, scaler.transform(X), y, cv=tscv, scoring="accuracy", n_jobs=-1)
+    cv_scrs = cross_val_score(ensemble, scaler.transform(X), y, cv=tscv, scoring="accuracy", n_jobs=1)
 
     # ── Feature importance (from RF component) ──
     try:
