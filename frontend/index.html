@@ -421,7 +421,6 @@ input[type="file"] { display: none; }
 }
 .explain-btn:hover { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
 
-/* Metric explanation panel */
 .metric-explain-panel {
   position: fixed;
   top: 0; right: 0; bottom: 0;
@@ -559,7 +558,6 @@ input[type="file"] { display: none; }
 .disclaimer-modal-body ul li { margin-bottom: 4px; }
 .disclaimer-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
 
-/* Inline disclaimer banner */
 .disclaimer-banner {
   background: linear-gradient(90deg, rgba(240,84,104,0.08) 0%, rgba(240,84,104,0.03) 100%);
   border: 1px solid rgba(240,84,104,0.2);
@@ -573,19 +571,264 @@ input[type="file"] { display: none; }
 .disclaimer-banner-text strong { color: var(--text); }
 .disclaimer-link { color: var(--red); cursor: pointer; text-decoration: underline; font-family: var(--mono); font-size: 0.7rem; }
 
-/* Global footer disclaimer */
-.global-footer {
-  border-top: 1px solid var(--border);
-  padding: 14px 30px;
-  background: rgba(10,12,18,0.6);
-  display: flex; align-items: center; gap: 12px;
+/* ═══════════════════════════════════════════════
+   PREMIUM DEVELOPER FOOTER — GLASS CARD VARIANT
+════════════════════════════════════════════════ */
+
+/* Gradient divider line above footer */
+.footer-gradient-divider {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(240,201,107,0.15) 20%,
+    rgba(56,217,245,0.2) 50%,
+    rgba(157,125,245,0.15) 80%,
+    transparent 100%
+  );
+  position: relative;
+}
+.footer-gradient-divider::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+  border-radius: 999px;
+  filter: blur(2px);
+}
+
+.dev-footer {
+  background: linear-gradient(180deg, var(--surface) 0%, rgba(5,6,8,0.98) 100%);
+  padding: 36px 30px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle ambient glow behind footer */
+.dev-footer::before {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 120px;
+  background: radial-gradient(ellipse, rgba(240,201,107,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.dev-footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   flex-wrap: wrap;
 }
-.footer-disclaimer-text {
-  font-family: var(--mono); font-size: 0.6rem; color: var(--text3);
-  letter-spacing: 0.04em; line-height: 1.6; flex: 1;
+
+/* Identity block */
+.dev-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
-.footer-disclaimer-link { color: var(--red); cursor: pointer; text-decoration: underline; }
+
+.dev-avatar {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(240,201,107,0.15), rgba(56,217,245,0.1));
+  border: 1px solid rgba(240,201,107,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.dev-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(240,201,107,0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.dev-avatar:hover::before { opacity: 1; }
+.dev-avatar:hover { border-color: rgba(240,201,107,0.5); box-shadow: 0 0 20px rgba(240,201,107,0.12); }
+
+.dev-info {}
+.dev-name {
+  font-family: var(--display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+.dev-role {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Connect buttons group */
+.dev-connect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Glass-effect social button */
+.dev-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+  backdrop-filter: blur(8px);
+}
+
+.dev-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.22s;
+}
+.dev-btn:hover::before { opacity: 1; }
+.dev-btn:hover { transform: translateY(-2px); }
+.dev-btn:active { transform: translateY(0px); }
+
+.dev-btn svg {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+.dev-btn:hover svg { transform: scale(1.15); }
+
+/* LinkedIn */
+.dev-btn-linkedin {
+  background: rgba(10, 102, 194, 0.08);
+  border-color: rgba(10, 102, 194, 0.25);
+  color: #5ba4d4;
+}
+.dev-btn-linkedin::before {
+  background: rgba(10, 102, 194, 0.12);
+}
+.dev-btn-linkedin:hover {
+  border-color: rgba(10, 102, 194, 0.5);
+  color: #7bbfed;
+  box-shadow: 0 4px 20px rgba(10, 102, 194, 0.15), 0 0 0 1px rgba(10, 102, 194, 0.1);
+}
+
+/* GitHub */
+.dev-btn-github {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text2);
+}
+.dev-btn-github::before {
+  background: rgba(255,255,255,0.06);
+}
+.dev-btn-github:hover {
+  border-color: rgba(255,255,255,0.22);
+  color: var(--text);
+  box-shadow: 0 4px 20px rgba(255,255,255,0.05), 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* Email */
+.dev-btn-email {
+  background: rgba(240,201,107,0.06);
+  border-color: rgba(240,201,107,0.2);
+  color: var(--gold);
+}
+.dev-btn-email::before {
+  background: rgba(240,201,107,0.1);
+}
+.dev-btn-email:hover {
+  border-color: rgba(240,201,107,0.45);
+  color: #f5d580;
+  box-shadow: 0 4px 20px rgba(240,201,107,0.12), 0 0 0 1px rgba(240,201,107,0.08);
+}
+
+/* Icon-only button variant */
+.dev-btn-icon {
+  padding: 8px 10px;
+}
+
+/* Footer right: legal micro text */
+.dev-footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.dev-legal {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+  text-align: right;
+  line-height: 1.6;
+}
+
+.dev-legal .disclaimer-link {
+  color: rgba(240,84,104,0.7);
+  font-size: 0.58rem;
+}
+
+.dev-version {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  color: var(--text3);
+  opacity: 0.5;
+  letter-spacing: 0.08em;
+}
+
+/* Separator dot */
+.dev-sep {
+  width: 3px; height: 3px;
+  background: var(--text3);
+  border-radius: 50%;
+  opacity: 0.4;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 6px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .content { padding: 18px; }
+  .wl-grid { grid-template-columns: 1fr; }
+  .verdict-signal { font-size: 2.2rem; }
+  .metric-explain-panel { width: 100%; }
+  .dev-footer-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .dev-footer-right { align-items: flex-start; }
+  .dev-legal { text-align: left; }
+  .dev-btn span { display: none; }
+  .dev-btn { padding: 9px 11px; }
+}
 
 /* ═══════════════════════════════════════════════
    ML PREDICT — REDESIGNED
@@ -697,15 +940,6 @@ input[type="file"] { display: none; }
 .headline-title a:hover { color: var(--gold); }
 .headline-meta { display: flex; align-items: center; gap: 10px; }
 .headline-pub { font-family: var(--mono); font-size: 0.62rem; color: var(--text3); }
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .content { padding: 18px; }
-  .wl-grid { grid-template-columns: 1fr; }
-  .verdict-signal { font-size: 2.2rem; }
-  .metric-explain-panel { width: 100%; }
-}
 </style>
 </head>
 <body>
@@ -902,7 +1136,7 @@ input[type="file"] { display: none; }
 
       <div class="table-wrap">
         <table id="portfolioTable">
-          <thead><tr><th>Symbol</th><th>Quantity</th><th>Avg Price ₹</th></tr></thead>
+          <thead><tr><th>Symbol</th><th>Quantity</th><th id="avgPriceHeader">Avg Price ₹ / $</th></tr></thead>
           <tbody>
             <tr>
               <td><input placeholder="e.g. GOLDBEES.NS"></td>
@@ -1128,14 +1362,68 @@ input[type="file"] { display: none; }
 
   </div>
 
-  <!-- Global Footer Disclaimer -->
-  <div class="global-footer">
-    <div class="footer-disclaimer-text">
-      ⚠️ <strong style="color:var(--text2)">Disclaimer:</strong> MarketLens is for informational and educational purposes only. Not financial advice. Past performance does not guarantee future results. All predictions are probabilistic. Consult a qualified financial advisor before investing.
-      <span class="footer-disclaimer-link" onclick="showFullDisclaimer()"> Read full disclaimer</span>
+  <!-- ═══════════════════════════════════════════════
+       PREMIUM DEVELOPER FOOTER
+  ════════════════════════════════════════════════ -->
+  <div class="footer-gradient-divider"></div>
+  <footer class="dev-footer">
+    <div class="dev-footer-inner">
+
+      <!-- Left: Identity -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="dev-identity">
+          <div class="dev-avatar">SP</div>
+          <div class="dev-info">
+            <div class="dev-name">Shiva Preetham C</div>
+            <div class="dev-role">Builder · MarketLens Intelligence</div>
+          </div>
+        </div>
+        <div class="dev-connect">
+          <!-- LinkedIn -->
+          <a href="https://www.linkedin.com/in/shiva-preetham-c-0124a2318/" target="_blank" rel="noreferrer" class="dev-btn dev-btn-linkedin" title="Connect on LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            <span>LinkedIn</span>
+          </a>
+          <!-- GitHub -->
+          <a href="https://github.com/Shiva-Preetham/MarketLens" target="_blank" rel="noreferrer" class="dev-btn dev-btn-github" title="View on GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <!-- Email -->
+          <a href="mailto:shivapreetham079@gmail.com" class="dev-btn dev-btn-email" title="Send Email">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span>Email</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Legal + meta -->
+      <div class="dev-footer-right">
+        <div class="dev-legal">
+          ⚠️ <strong style="color:var(--text2)">Disclaimer:</strong> For informational &amp; educational purposes only.<br>
+          Not financial advice. All predictions are probabilistic.<br>
+          Consult a qualified financial advisor before investing.
+          <span class="disclaimer-link" onclick="showFullDisclaimer()"> Full disclaimer →</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+          <span class="dev-version">MarketLens v0.2.0</span>
+          <span class="dev-sep"></span>
+          <span class="dev-version">MIT License</span>
+          <span class="dev-sep"></span>
+          <span class="dev-version">© 2026 Shiva Preetham</span>
+        </div>
+      </div>
+
     </div>
-    <span style="font-family:var(--mono);font-size:0.6rem;color:var(--text3)">MarketLens v0.2.0</span>
-  </div>
+  </footer>
+
 </div>
 </div>
 
@@ -1149,6 +1437,38 @@ const BOOKMARKS_KEY = "marketlens_portfolio_bookmarks_v1";
 const LAST_BOOKMARK_KEY = "marketlens_last_bookmark_id_v1";
 const DISCLAIMER_KEY = "marketlens_disclaimer_accepted";
 const TOPBAR = { dashboard: ["Stock Analysis","DASHBOARD / ANALYZE"], portfolio: ["My Portfolio","PORTFOLIO / OPTIMIZE"], watchlist: ["Watchlist","WATCHLIST / DATABASE"], predict: ["ML Prediction","PREDICT / ENSEMBLE · RF + XGBOOST"] };
+
+// ══ MARKET DETECTION HELPERS ══
+// Detect if a symbol is US-listed (no exchange suffix, or .US)
+function isUSSymbol(symbol) {
+  if (!symbol) return false;
+  const s = symbol.trim().toUpperCase();
+  // Indian suffixes: .NS (NSE), .BO (BSE)
+  if (s.endsWith('.NS') || s.endsWith('.BO') || s.endsWith('.BSE')) return false;
+  // Other common non-US suffixes
+  const nonUS = ['.L','.PA','.DE','.HK','.TO','.AX','.T','.SW','.AS'];
+  if (nonUS.some(sfx => s.endsWith(sfx))) return false;
+  // If no suffix or ends with .US or known US ticker patterns
+  return true;
+}
+
+function detectPortfolioMarket(symbols) {
+  if (!symbols || !symbols.length) return 'mixed';
+  const usCount = symbols.filter(isUSSymbol).length;
+  const inCount = symbols.length - usCount;
+  if (usCount === symbols.length) return 'US';
+  if (inCount === symbols.length) return 'IN';
+  return 'mixed';
+}
+
+function getCurrencySymbol(sym) {
+  return isUSSymbol(sym) ? '$' : '₹';
+}
+
+function formatAmount(amount, sym) {
+  const curr = getCurrencySymbol(sym);
+  return `${curr}${amount.toFixed(0)}`;
+}
 
 // ══ DISCLAIMER LOGIC ══
 function closeDisclaimer() {
@@ -1236,7 +1556,7 @@ const METRIC_EXPLANATIONS = {
     title: "Efficient Frontier — Modern Portfolio Theory",
     what: "The Efficient Frontier is a concept from Modern Portfolio Theory (MPT) introduced by Harry Markowitz in 1952. It is the set of optimal portfolios that offer the highest expected return for a defined level of risk, or the lowest risk for a given level of return.",
     formula: "Maximize: (w·μ − Rf) / √(wᵀΣw) · Subject to: Σwᵢ = 1, wᵢ ≥ 0",
-    why: "Most investors hold concentarated portfolios that are below the frontier — they take more risk than necessary for their return level. Running the frontier shows you the optimal allocation ratios to move onto the efficient line through diversification.",
+    why: "Most investors hold concentrated portfolios that are below the frontier — they take more risk than necessary for their return level. Running the frontier shows you the optimal allocation ratios to move onto the efficient line through diversification.",
     howToRead: [
       { label: "Each Dot", color: "badge-cyan", text: "One possible portfolio allocation combination." },
       { label: "Green Star", color: "badge-green", text: "Max Sharpe — best return per unit of risk." },
@@ -1270,6 +1590,18 @@ function closeMetricPanel() {
 // ══ CLAUDE API — FREE AI EXPLANATION ══
 async function getClaudePortfolioExplanation(portfolioData, symbols) {
   try {
+    const market = detectPortfolioMarket(symbols);
+    const isUS = market === 'US';
+    const isMixed = market === 'mixed';
+
+    const marketContext = isUS
+      ? "This is a US stock portfolio traded on NYSE/NASDAQ. Recommend US-listed stocks and ETFs (S&P 500, Nasdaq, sector ETFs). Use USD pricing context. Reference SEC, Federal Reserve, and US market dynamics."
+      : isMixed
+      ? "This is a mixed portfolio with both Indian and US stocks. Provide recommendations relevant to each market. For Indian stocks, reference NSE/BSE. For US stocks, reference NYSE/NASDAQ."
+      : "This is an Indian stock portfolio traded on NSE/BSE. Recommend Indian stocks and ETFs (Nifty ETFs, Gold Bees, etc.). Use INR context. Reference SEBI, RBI, and Indian market dynamics.";
+
+    const exchangeSuffix = isUS ? "(no suffix needed, e.g. AAPL, MSFT, SPY)" : "(use .NS for NSE or .BO for BSE, e.g. RELIANCE.NS)";
+
     const prompt = `You are an expert quantitative portfolio strategist and financial analyst. Analyze this portfolio and give a comprehensive, actionable report.
 
 Portfolio Data:
@@ -1277,19 +1609,21 @@ ${JSON.stringify(portfolioData, null, 2)}
 
 Symbols held: ${symbols.join(", ")}
 
+Market Context: ${marketContext}
+
 Please provide:
 
-1. **OVERALL ASSESSMENT** — In 2-3 sentences, summarize the portfolio's current state (performance, risk level, diversification quality).
+1. OVERALL ASSESSMENT — In 2-3 sentences, summarize the portfolio's current state (performance, risk level, diversification quality).
 
-2. **STOCK-BY-STOCK RECOMMENDATIONS** — For each stock, state:
+2. STOCK-BY-STOCK RECOMMENDATIONS — For each stock, state:
    - Whether to INCREASE quantity, DECREASE quantity, or HOLD
    - Brief reason why (1 sentence)
 
-3. **DIVERSIFICATION GAPS** — What sectors/asset types are missing that would improve this portfolio?
+3. DIVERSIFICATION GAPS — What sectors/asset types are missing that would improve this portfolio?
 
-4. **SUGGESTED ADDITIONAL STOCKS** — Recommend 3-5 specific stocks (with NSE tickers if Indian) to add based on this portfolio's profile. Include: ticker, company name, why it fits.
+4. SUGGESTED ADDITIONAL STOCKS — Recommend 3-5 specific stocks or ETFs relevant to this portfolio's market ${exchangeSuffix}. Include: ticker, company/fund name, why it fits.
 
-5. **RISK WARNING** — One specific risk the investor should watch.
+5. RISK WARNING — One specific risk the investor should watch.
 
 Be direct, specific, and concise. Use numbers when possible. Format clearly with these exact section headers. Do not use asterisks for bold — just plain text headers.`;
 
@@ -1314,16 +1648,12 @@ Be direct, specific, and concise. Use numbers when possible. Format clearly with
 
 function renderAIExplanation(text, metrics, stockData) {
   if (!text) {
-    // Fallback: Generate a decent explanation from metrics alone
     return renderFallbackExplanation(metrics, stockData);
   }
 
-  const sections = text.split(/\n(?=\d\.|OVERALL|STOCK|DIVERSIF|SUGGEST|RISK)/g).filter(Boolean);
   const box = document.getElementById("aiRecommendation");
-
   let html = "";
 
-  // Metrics summary row
   if (metrics) {
     const m = metrics;
     html += `<div class="metrics-row" style="margin-bottom:18px">
@@ -1331,7 +1661,6 @@ function renderAIExplanation(text, metrics, stockData) {
     </div>`;
   }
 
-  // Render the AI text as structured blocks
   if (text.length > 50) {
     const lines = text.split('\n').filter(l => l.trim());
     let currentSection = '';
@@ -1380,6 +1709,12 @@ function renderFallbackExplanation(metrics, stockData) {
     box.innerHTML = '<span class="placeholder">Calculate portfolio for AI recommendations</span>';
     return;
   }
+
+  // Detect market from stockData keys
+  const symbols = stockData ? Object.keys(stockData) : [];
+  const market = detectPortfolioMarket(symbols);
+  const isUS = market === 'US';
+
   const sharpe = parseFloat(metrics?.sharpe_ratio || metrics?.sharpe || 0);
   const ret = parseFloat(metrics?.expected_return || 0);
   const vol = parseFloat(metrics?.volatility || 0);
@@ -1421,17 +1756,24 @@ function renderFallbackExplanation(metrics, stockData) {
     }
   }
 
+  // Market-aware suggestions
+  const suggestions = isUS ? [
+    {ticker:"SPY",name:"S&P 500 ETF (SPDR)",reason:"Broad US market exposure. Essential anchor for any US portfolio. Low expense ratio, high liquidity."},
+    {ticker:"QQQ",name:"Nasdaq 100 ETF",reason:"Tech-heavy growth exposure. Complements value holdings and improves long-term return potential."},
+    {ticker:"GLD",name:"Gold ETF (SPDR Gold)",reason:"Inflation hedge and safe haven. Reduces correlation with equity drawdowns."}
+  ] : [
+    {ticker:"NIFTYBEES.NS",name:"Nifty 50 ETF",reason:"Broad index exposure reduces concentration risk. Good anchor for any Indian portfolio."},
+    {ticker:"GOLDBEES.NS",name:"Gold ETF",reason:"Gold is a natural hedge against equity drawdowns and rupee depreciation."},
+    {ticker:"LIQUIDBEES.NS",name:"Liquid ETF",reason:"Near-cash holding for rebalancing opportunity and capital preservation."}
+  ];
+
   html += `<div class="ai-insight-block">
     <div class="ai-insight-icon neutral">💡</div>
     <div class="ai-insight-content">
       <div class="ai-insight-label">Suggested Additions</div>
       <div class="ai-insight-text">
         <div class="stock-rec-grid">
-          ${[
-            {ticker:"NIFTYBEES.NS",name:"Nifty 50 ETF",reason:"Broad index exposure reduces concentration risk. Good anchor for any Indian portfolio."},
-            {ticker:"GOLDBEES.NS",name:"Gold ETF",reason:"Gold is a natural hedge against equity drawdowns and rupee depreciation."},
-            {ticker:"LIQUIDBEES.NS",name:"Liquid ETF",reason:"Near-cash holding for rebalancing opportunity and capital preservation."}
-          ].map(s=>`<div class="stock-rec-card"><div class="stock-rec-ticker">${s.ticker.replace('.NS','')}</div><div class="stock-rec-name">${s.name}</div><div class="stock-rec-reason">${s.reason}</div></div>`).join("")}
+          ${suggestions.map(s=>`<div class="stock-rec-card"><div class="stock-rec-ticker">${s.ticker.replace('.NS','')}</div><div class="stock-rec-name">${s.name}</div><div class="stock-rec-reason">${s.reason}</div></div>`).join("")}
         </div>
       </div>
     </div>
@@ -1685,13 +2027,20 @@ async function calculatePortfolio() {
       allocation[symbol] = current;
       stockData[symbol] = { qty, avg, currentPrice, invested, current, pnl, pct: parseFloat(retPct) };
       if (!symbols.includes(symbol)) symbols.push(symbol);
+
+      // Smart currency symbol per stock
+      const curr = getCurrencySymbol(symbol);
       const cl = pnl >= 0 ? "up" : "down";
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)"><div style="font-family:var(--display);font-weight:600;font-size:0.88rem">${symbol}</div><div style="display:flex;gap:18px;font-family:var(--mono);font-size:0.76rem;color:var(--text2)"><span>Invested <b style="color:var(--text)">₹${invested.toFixed(0)}</b></span><span>Current <b style="color:var(--text)">₹${current.toFixed(0)}</b></span><span class="${cl}" style="font-weight:500">${pnl >= 0 ? "+" : ""}₹${pnl.toFixed(0)} (${retPct}%)</span></div></div>`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)"><div style="font-family:var(--display);font-weight:600;font-size:0.88rem">${symbol}</div><div style="display:flex;gap:18px;font-family:var(--mono);font-size:0.76rem;color:var(--text2)"><span>Invested <b style="color:var(--text)">${curr}${invested.toFixed(0)}</b></span><span>Current <b style="color:var(--text)">${curr}${current.toFixed(0)}</b></span><span class="${cl}" style="font-weight:500">${pnl >= 0 ? "+" : ""}${curr}${Math.abs(pnl).toFixed(0)} (${retPct}%)</span></div></div>`;
     }
+
+    // Total row (show mixed currency label if mixed portfolio)
+    const market = detectPortfolioMarket(symbols);
+    const totalCurrLabel = market === 'US' ? '$' : market === 'mixed' ? '~' : '₹';
     const totalPnL = totalCurrent - totalInvested;
     const totalRet = totalInvested > 0 ? ((totalCurrent / totalInvested - 1) * 100).toFixed(2) : 0;
     const totCl = totalPnL >= 0 ? "up" : "down";
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0 3px;margin-top:3px"><div style="font-family:var(--mono);font-size:0.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">Total Portfolio</div><div style="font-family:var(--mono);font-size:0.8rem;display:flex;gap:18px"><span>Invested <b style="color:var(--text)">₹${totalInvested.toFixed(0)}</b></span><span>Current <b style="color:var(--text)">₹${totalCurrent.toFixed(0)}</b></span><span class="${totCl}" style="font-weight:600;font-size:0.88rem">${totalPnL >= 0 ? "+" : ""}₹${totalPnL.toFixed(0)} (${totalRet}%)</span></div></div>`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0 3px;margin-top:3px"><div style="font-family:var(--mono);font-size:0.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">Total Portfolio</div><div style="font-family:var(--mono);font-size:0.8rem;display:flex;gap:18px"><span>Invested <b style="color:var(--text)">${totalCurrLabel}${totalInvested.toFixed(0)}</b></span><span>Current <b style="color:var(--text)">${totalCurrLabel}${totalCurrent.toFixed(0)}</b></span><span class="${totCl}" style="font-weight:600;font-size:0.88rem">${totalPnL >= 0 ? "+" : ""}${totalCurrLabel}${Math.abs(totalPnL).toFixed(0)} (${totalRet}%)</span></div></div>`;
     output.innerHTML = html || '<span class="placeholder">Add valid holdings</span>';
 
     if (Object.keys(allocation).length > 0) {
@@ -1706,7 +2055,7 @@ async function calculatePortfolio() {
       const labels = display.map(e => e.s);
       const values = display.map(e => e.v);
       const colors = display.map((e,i) => e.isOther ? "rgba(255,255,255,0.12)" : COLORS[i % COLORS.length]);
-      allocationChart = new Chart(canvas, { type: "doughnut", data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] }, options: { responsive: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ₹${ctx.raw.toFixed(0)} (${totalCurrent > 0 ? ((ctx.raw/totalCurrent)*100).toFixed(1) : 0}%)` } } }, cutout: "72%" } });
+      allocationChart = new Chart(canvas, { type: "doughnut", data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] }, options: { responsive: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${totalCurrLabel}${ctx.raw.toFixed(0)} (${totalCurrent > 0 ? ((ctx.raw/totalCurrent)*100).toFixed(1) : 0}%)` } } }, cutout: "72%" } });
       legendEl.innerHTML = display.map((e,i) => `<div class="alloc-item"><div class="alloc-dot" style="background:${colors[i]}"></div><span>${e.s}</span><span class="alloc-pct">${totalCurrent > 0 ? ((e.v/totalCurrent)*100).toFixed(1) : 0}%</span></div>`).join("");
     }
 
@@ -1721,7 +2070,6 @@ async function updateAiRecommendation(symbols, stockData) {
   box.innerHTML = '<span class="loader">Asking Claude AI portfolio strategist</span>';
 
   try {
-    // Try to get metrics from the backend
     let metrics = null;
     try {
       const res = await fetch(`${API_BASE}/portfolio/optimize_ai`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(symbols) });
@@ -1729,7 +2077,6 @@ async function updateAiRecommendation(symbols, stockData) {
       metrics = data.metrics || null;
     } catch {}
 
-    // Build portfolio data for Claude
     const portfolioPayload = {
       symbols,
       metrics,
@@ -1737,7 +2084,6 @@ async function updateAiRecommendation(symbols, stockData) {
       totalValue: stockData ? Object.values(stockData).reduce((s, v) => s + (v.current || 0), 0) : null
     };
 
-    // Call Claude API for explanation
     const claudeText = await getClaudePortfolioExplanation(portfolioPayload, symbols);
     renderAIExplanation(claudeText, metrics, stockData);
 
@@ -1830,7 +2176,7 @@ const FEAT_META = {
   stoch_d:     { name: "Stochastic D", icon: "〜", desc: v => v > 80 ? "Overbought zone — watch for reversal" : v < 20 ? "Oversold zone — watch for bounce" : `Mid range (${v})`, tip: "Momentum oscillator. Like RSI but uses recent high/low range." },
   bb_width:    { name: "BB Width", icon: "◁▷", desc: v => v < 0.06 ? "Volatility squeeze — breakout likely soon" : v > 0.15 ? "High volatility, wide range" : `Normal range (${v})`, tip: "How wide the Bollinger Bands are. Narrow = low volatility, potential breakout. Wide = high volatility." },
   vix_close:   { name: "VIX (Fear)", icon: "😨", desc: v => v > 25 ? "High fear in markets — risky environment" : v > 18 ? "Elevated caution" : `Low fear, calm market (${v})`, tip: "VIX = market's 'fear gauge'. Below 15 = calm, 15-25 = normal, above 25 = fearful." },
-  atr_14:      { name: "ATR 14", icon: "↕", desc: v => `Daily price range ~₹${v} — set stops accordingly`, tip: "Average True Range: typical daily price movement. Helps size your position and set stop-losses." },
+  atr_14:      { name: "ATR 14", icon: "↕", desc: v => `Daily price range ~${v} — set stops accordingly`, tip: "Average True Range: typical daily price movement. Helps size your position and set stop-losses." },
   obv_chg:     { name: "OBV Trend", icon: "📊", desc: v => v > 0 ? "Volume flowing IN — buyers are active" : v < 0 ? "Volume flowing OUT — selling pressure" : "Neutral volume flow", tip: "On-Balance Volume: tracks whether volume is coming in on up-days or down-days. Confirms price moves." },
   obv_signal:  { name: "OBV Signal", icon: "📊", desc: v => v > 0 ? "Volume confirms bullish trend" : v < 0 ? "Volume diverges — weak buying" : "Flat volume flow", tip: "Direction of volume flow. Positive means buying pressure is building." },
   macd_hist:   { name: "MACD Histogram", icon: "〰", desc: v => v > 0 ? "Momentum rising — bullish crossover" : v < 0 ? "Momentum fading — bearish" : "Momentum neutral", tip: "MACD histogram shows momentum shifts. Positive and rising = strong bull momentum." },
